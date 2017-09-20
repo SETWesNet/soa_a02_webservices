@@ -38,6 +38,7 @@
             this.grpboxParamters = new System.Windows.Forms.GroupBox();
             this.richtxtReturnValue = new System.Windows.Forms.RichTextBox();
             this.lblReturnValue = new System.Windows.Forms.Label();
+            this.btnSend = new System.Windows.Forms.Button();
             this.grpboxMain.SuspendLayout();
             this.grpboxParamters.SuspendLayout();
             this.SuspendLayout();
@@ -55,6 +56,7 @@
             this.grpboxMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpboxMain.Controls.Add(this.btnSend);
             this.grpboxMain.Controls.Add(this.lblReturnValue);
             this.grpboxMain.Controls.Add(this.richtxtReturnValue);
             this.grpboxMain.Controls.Add(this.grpboxParamters);
@@ -64,7 +66,7 @@
             this.grpboxMain.Controls.Add(this.drpdwnWebServices);
             this.grpboxMain.Location = new System.Drawing.Point(13, 5);
             this.grpboxMain.Name = "grpboxMain";
-            this.grpboxMain.Size = new System.Drawing.Size(648, 685);
+            this.grpboxMain.Size = new System.Drawing.Size(648, 733);
             this.grpboxMain.TabIndex = 1;
             this.grpboxMain.TabStop = false;
             // 
@@ -132,7 +134,7 @@
             this.richtxtReturnValue.Location = new System.Drawing.Point(10, 403);
             this.richtxtReturnValue.Name = "richtxtReturnValue";
             this.richtxtReturnValue.ReadOnly = true;
-            this.richtxtReturnValue.Size = new System.Drawing.Size(626, 276);
+            this.richtxtReturnValue.Size = new System.Drawing.Size(626, 246);
             this.richtxtReturnValue.TabIndex = 6;
             this.richtxtReturnValue.Text = "Return Value Here";
             // 
@@ -145,11 +147,22 @@
             this.lblReturnValue.TabIndex = 7;
             this.lblReturnValue.Text = "Return Value(s)";
             // 
+            // btnSend
+            // 
+            this.btnSend.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSend.Location = new System.Drawing.Point(10, 655);
+            this.btnSend.Name = "btnSend";
+            this.btnSend.Size = new System.Drawing.Size(632, 72);
+            this.btnSend.TabIndex = 8;
+            this.btnSend.Text = "Send";
+            this.btnSend.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(673, 702);
+            this.ClientSize = new System.Drawing.Size(673, 750);
             this.Controls.Add(this.grpboxMain);
             this.Name = "MainForm";
             this.Text = "Web Service Interface";
@@ -172,6 +185,7 @@
         private System.Windows.Forms.GroupBox grpboxParamters;
         private System.Windows.Forms.Label lblReturnValue;
         private System.Windows.Forms.RichTextBox richtxtReturnValue;
+        private System.Windows.Forms.Button btnSend;
     }
 }
 

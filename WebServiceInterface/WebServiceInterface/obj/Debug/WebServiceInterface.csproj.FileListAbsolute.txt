@@ -1,0 +1,8 @@
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\bin\Debug\WebServiceInterface.exe.config
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\bin\Debug\WebServiceInterface.exe
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\bin\Debug\WebServiceInterface.pdb
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\obj\Debug\WebServiceInterface.MainForm.resources
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\obj\Debug\WebServiceInterface.Properties.Resources.resources
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\obj\Debug\WebServiceInterface.csproj.GenerateResource.Cache
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\obj\Debug\WebServiceInterface.exe
+C:\Users\Kyle\Desktop\SETProjectRepo\WebServiceInterface\soa_a02_webservices\WebServiceInterface\WebServiceInterface\obj\Debug\WebServiceInterface.pdb

@@ -6,19 +6,19 @@ namespace WebServiceInterface.Library
     class LibraryManager
     {
         private string _rawContent;
-        private ServiceInfo[] _services;
+        private WebService[] _services;
 
         public LibraryManager(string fileName)
         {
             _rawContent = File.ReadAllText(fileName);
-            _services = JsonConvert.DeserializeObject<ServiceInfo[]>(_rawContent);
+            _services = JsonConvert.DeserializeObject<WebService[]>(_rawContent);
         }
 
-        public ServiceInfo getService(string name)
+        public WebService getService(string name)
         {
-            ServiceInfo result = null;
+            WebService result = null;
 
-            foreach(ServiceInfo service in _services)
+            foreach(WebService service in _services)
             {
                 if (service.name == name)
                 {
@@ -32,7 +32,7 @@ namespace WebServiceInterface.Library
 
         public Method[] getAvailableMethods(string serviceName)
         {
-            ServiceInfo service = getService(serviceName);
+            WebService service = getService(serviceName);
 
             return service.methods;
         }

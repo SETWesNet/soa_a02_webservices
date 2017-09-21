@@ -1,6 +1,6 @@
 ﻿namespace WebServiceInterface.Library
 {
-    class ServiceInfo
+    class WebService
     {
         public string name { get; set; }
         public string url { get; set; }

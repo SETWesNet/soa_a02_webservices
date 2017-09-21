@@ -47,7 +47,7 @@
             // 
             this.drpdwnWebServices.FormattingEnabled = true;
             this.drpdwnWebServices.Location = new System.Drawing.Point(7, 29);
-            this.drpdwnWebServices.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.drpdwnWebServices.Margin = new System.Windows.Forms.Padding(2);
             this.drpdwnWebServices.Name = "drpdwnWebServices";
             this.drpdwnWebServices.Size = new System.Drawing.Size(208, 21);
             this.drpdwnWebServices.TabIndex = 0;
@@ -66,9 +66,9 @@
             this.grpboxMain.Controls.Add(this.lblWebService);
             this.grpboxMain.Controls.Add(this.drpdwnWebServices);
             this.grpboxMain.Location = new System.Drawing.Point(9, 3);
-            this.grpboxMain.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpboxMain.Margin = new System.Windows.Forms.Padding(2);
             this.grpboxMain.Name = "grpboxMain";
-            this.grpboxMain.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpboxMain.Padding = new System.Windows.Forms.Padding(2);
             this.grpboxMain.Size = new System.Drawing.Size(432, 476);
             this.grpboxMain.TabIndex = 1;
             this.grpboxMain.TabStop = false;
@@ -78,12 +78,13 @@
             this.btnSend.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSend.Location = new System.Drawing.Point(7, 426);
-            this.btnSend.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnSend.Margin = new System.Windows.Forms.Padding(2);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(421, 47);
             this.btnSend.TabIndex = 8;
             this.btnSend.Text = "Send";
             this.btnSend.UseVisualStyleBackColor = true;
+            this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
             // 
             // lblReturnValue
             // 
@@ -101,7 +102,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.richtxtReturnValue.Location = new System.Drawing.Point(7, 262);
-            this.richtxtReturnValue.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.richtxtReturnValue.Margin = new System.Windows.Forms.Padding(2);
             this.richtxtReturnValue.Name = "richtxtReturnValue";
             this.richtxtReturnValue.ReadOnly = true;
             this.richtxtReturnValue.Size = new System.Drawing.Size(419, 161);
@@ -114,9 +115,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.grpboxParamters.Controls.Add(this.flwParameters);
             this.grpboxParamters.Location = new System.Drawing.Point(7, 51);
-            this.grpboxParamters.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpboxParamters.Margin = new System.Windows.Forms.Padding(2);
             this.grpboxParamters.Name = "grpboxParamters";
-            this.grpboxParamters.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.grpboxParamters.Padding = new System.Windows.Forms.Padding(2);
             this.grpboxParamters.Size = new System.Drawing.Size(417, 194);
             this.grpboxParamters.TabIndex = 5;
             this.grpboxParamters.TabStop = false;
@@ -130,7 +131,7 @@
             this.flwParameters.AutoScroll = true;
             this.flwParameters.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flwParameters.Location = new System.Drawing.Point(4, 16);
-            this.flwParameters.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.flwParameters.Margin = new System.Windows.Forms.Padding(2);
             this.flwParameters.Name = "flwParameters";
             this.flwParameters.Size = new System.Drawing.Size(409, 174);
             this.flwParameters.TabIndex = 4;
@@ -153,7 +154,7 @@
             this.drpdwnMethods.Enabled = false;
             this.drpdwnMethods.FormattingEnabled = true;
             this.drpdwnMethods.Location = new System.Drawing.Point(217, 29);
-            this.drpdwnMethods.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.drpdwnMethods.Margin = new System.Windows.Forms.Padding(2);
             this.drpdwnMethods.Name = "drpdwnMethods";
             this.drpdwnMethods.Size = new System.Drawing.Size(208, 21);
             this.drpdwnMethods.TabIndex = 2;
@@ -176,7 +177,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(449, 487);
             this.Controls.Add(this.grpboxMain);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MainForm";
             this.Text = "Web Service Interface";
             this.Load += new System.EventHandler(this.MainForm_Load);

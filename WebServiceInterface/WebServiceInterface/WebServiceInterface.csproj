@@ -54,6 +54,7 @@
     <Compile Include="Library\ServiceInfo.cs" />
     <Compile Include="Library\Parameter.cs" />
     <Compile Include="Library\Method.cs" />
+    <Compile Include="Library\SOAPWebService.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

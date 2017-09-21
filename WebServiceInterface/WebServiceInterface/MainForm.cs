@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -31,6 +30,12 @@ namespace WebServiceInterface
         private void MainForm_Load(object sender, EventArgs e)
         {
             Method[] methods = configLibrary.getAvailableMethods("cjm");
+        }
+
+        private async void btnSend_Click(object sender, EventArgs e)
+        {
+            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/country.asmx");
+            richtxtReturnValue.Text = await webService.CallMethodAsync(null);
         }
     }
 }

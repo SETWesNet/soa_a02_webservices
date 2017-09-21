@@ -51,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Library\LibraryManager.cs" />
+    <Compile Include="Library\ServiceInfo.cs" />
+    <Compile Include="Library\Parameter.cs" />
+    <Compile Include="Library\Method.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

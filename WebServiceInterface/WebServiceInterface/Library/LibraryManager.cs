@@ -3,26 +3,6 @@ using Newtonsoft.Json;
 
 namespace WebServiceInterface.Library
 {
-    class Parameter
-    {
-        public string type { get; set; }
-        public string name { get; set; }
-    }
-      
-    class Method
-    {
-        public string name { get; set; }
-        public Parameter[] parameters { get; set; }
-    }
-
-    class ServiceInfo
-    {
-        public string name { get; set; }
-        public string url { get; set; }
-        public Method[] methods { get; set; }
-    }
-
-
     class LibraryManager
     {
         private string _rawContent;
@@ -50,11 +30,12 @@ namespace WebServiceInterface.Library
             return result;
         }
 
-        public Method[] getMethods(string serviceName)
+        public Method[] getAvailableMethods(string serviceName)
         {
             ServiceInfo service = getService(serviceName);
 
             return service.methods;
         }
+
     }
 }

@@ -30,6 +30,7 @@ namespace WebServiceInterface
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            Method[] methods = configLibrary.getAvailableMethods("cjm");
         }
     }
 }

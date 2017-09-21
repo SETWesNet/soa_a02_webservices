@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace WebServiceInterface.Library
 {
@@ -27,28 +26,35 @@ namespace WebServiceInterface.Library
     class LibraryManager
     {
         private string _rawContent;
-        private ServiceInfo[] allInfos;
+        private ServiceInfo[] _services;
 
         public LibraryManager(string fileName)
         {
             _rawContent = File.ReadAllText(fileName);
-            allInfos = JsonConvert.DeserializeObject<ServiceInfo[]>(_rawContent);
+            _services = JsonConvert.DeserializeObject<ServiceInfo[]>(_rawContent);
         }
 
         public ServiceInfo getService(string name)
         {
             ServiceInfo result = null;
 
-            foreach(ServiceInfo current in allInfos)
+            foreach(ServiceInfo service in _services)
             {
-                if (current.name == name)
+                if (service.name == name)
                 {
-                    result = current;
+                    result = service;
                     break;
                 } 
             }
 
             return result;
+        }
+
+        public Method[] getMethods(string serviceName)
+        {
+            ServiceInfo service = getService(serviceName);
+
+            return service.methods;
         }
     }
 }

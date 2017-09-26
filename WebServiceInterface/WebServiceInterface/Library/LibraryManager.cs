@@ -15,16 +15,24 @@ namespace WebServiceInterface.Library
             _services = JsonConvert.DeserializeObject<WebService[]>(_rawContent);
         }
 
-        public WebService getService(string name)
+        public WebService[] Services
         {
-            return _services.Where(service => service.name == name).First();
+            get
+            {
+                return _services;
+            }
+        } 
+
+        public WebService GetService(string serviceURL)
+        {
+            return _services.First(service => service.Url == serviceURL);
         }
 
-        public Method[] getAvailableMethods(string serviceName)
+        public Method[] GetAvailableMethods(string serviceURL)
         {
-            WebService service = getService(serviceName);
+            WebService service = GetService(serviceURL);
 
-            return service.methods;
+            return service.Methods;
         }
 
     }

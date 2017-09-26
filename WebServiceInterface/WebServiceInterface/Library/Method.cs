@@ -2,7 +2,7 @@
 {
     class Method
     {
-        public string name { get; set; }
-        public Parameter[] parameters { get; set; }
+        public string Name { get; set; }
+        public Parameter[] Parameters { get; set; }
     }
 }

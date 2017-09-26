@@ -29,7 +29,9 @@ namespace WebServiceInterface
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            Method[] methods = configLibrary.getAvailableMethods("Temperature Conversion");
+            drpdwnWebServices.DisplayMember = nameof(WebService.Name);
+            drpdwnWebServices.ValueMember = nameof(WebService.Url);
+            drpdwnWebServices.DataSource = configLibrary.Services;
         }
 
         private async void btnSend_Click(object sender, EventArgs e)

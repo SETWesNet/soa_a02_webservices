@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace WebServiceInterface.Library
 {
@@ -16,18 +17,7 @@ namespace WebServiceInterface.Library
 
         public WebService getService(string name)
         {
-            WebService result = null;
-
-            foreach(WebService service in _services)
-            {
-                if (service.name == name)
-                {
-                    result = service;
-                    break;
-                } 
-            }
-
-            return result;
+            return _services.Where(service => service.name == name).First();
         }
 
         public Method[] getAvailableMethods(string serviceName)

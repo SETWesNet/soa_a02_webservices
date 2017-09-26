@@ -23,18 +23,18 @@ namespace WebServiceInterface
         public MainForm()
         {
             InitializeComponent();
-            configPath = "test.txt";
+            configPath = "config.json";
             configLibrary = new LibraryManager(configPath);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            Method[] methods = configLibrary.getAvailableMethods("cjm");
+            Method[] methods = configLibrary.getAvailableMethods("Temperature Conversion");
         }
 
         private async void btnSend_Click(object sender, EventArgs e)
         {
-            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/country.asmx");
+            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx");
             richtxtReturnValue.Text = await webService.CallMethodAsync(null);
         }
     }

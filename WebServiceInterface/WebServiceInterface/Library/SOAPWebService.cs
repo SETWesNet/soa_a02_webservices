@@ -14,6 +14,7 @@ namespace WebServiceInterface
     class SOAPWebService
     {
         private string _serviceURL;
+        const string DOT_NET_WSDL_SUFFIX = "?WSDL";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SOAPWebService"/> class, which
@@ -74,7 +75,68 @@ namespace WebServiceInterface
      
             return soapResponse;
         }
-        
+
+        #region WSDL
+
+
+        /// <summary>
+        /// A method to "normalize" WSDL urls. If you pass it a page with .asmx it will append a "?WSDL" to the end. If another service is chosen it uses the .wsdl convention.
+        /// </summary>
+        /// <param name="serviceUrl">The service url we are normalizing</param>
+        /// <returns></returns>
+        private string NormalizeWSDLUrl(string serviceUrl)
+        {
+            string[] parts = serviceUrl.Split('/');
+
+            // TODO(c-jm): This may need some work, do testing with "www.abc.com/service.wsdl" services
+            string normalizedUrl = serviceUrl;
+
+            if (parts.Last().EndsWith(".asmx"))
+            {
+                normalizedUrl += "?WSDL";
+            }
+
+            return normalizedUrl;
+        }
+
+        /// <summary>
+        /// Create a WebRequest which represents a get request to get a WSDL
+        /// </summary>
+        /// <param name="serviceUrl"> The service that we are trying to recieve the WSDL for. </param>
+        /// <returns></returns>
+        private HttpWebRequest CreateWSDLWebRequest(string serviceUrl)
+        {
+            string normalizedUrl = NormalizeWSDLUrl(serviceUrl);
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(normalizedUrl);
+            request.Method = "GET";
+
+            return request;
+        }
+
+        /// <summary>
+        /// Specify a URL and get a WSDL for that service.
+        /// </summary>
+        /// <param name="serviceUrl"> The URL that we are specifying, in this case the URL will be normalized for WSDL services. (?WSDL will be appended for .NET etc) </param>
+        /// <returns></returns>
+        public async Task<XmlDocument> GetWSDLAsync(string serviceUrl)
+        {
+            HttpWebRequest request = CreateWSDLWebRequest(serviceUrl);
+            WebResponse response = await request.GetResponseAsync();
+            XmlDocument wsdl = new XmlDocument();
+
+            using (StreamReader sr = new StreamReader(response.GetResponseStream()))
+            {
+                string wsdlString = await sr.ReadToEndAsync();
+                wsdl.LoadXml(wsdlString);
+            }
+
+            return wsdl;
+        }
+
+        #endregion
+
+
         /// <summary>
         /// Creates an HTTPWebRequest object with the HTTP header information configured
         /// to carry a SOAP payload using POST to the desried web service URL.

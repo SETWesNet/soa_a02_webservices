@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Collections.Generic;
 using WebServiceInterface.Library;
+using System.Xml;
 
 namespace WebServiceInterface
 {
@@ -67,7 +68,9 @@ namespace WebServiceInterface
         private async void btnSend_Click(object sender, EventArgs e)
         {
             SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx");
-            richtxtReturnValue.Text = await webService.CallMethodAsync(null);
+
+            // NOTE(c-jm): There was a bug here when trying to call method async. I think it is because we are sending null. Look into it tomorrow.
+            //richtxtReturnValue.Text = await webService.CallMethodAsync(null);
         }
 
         private void drpdwnWebServices_SelectionChangeCommitted(object sender, EventArgs e)

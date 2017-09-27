@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Net;
 using System.Web.Services.Protocols;
+using WebServiceInterface.Library;
 using System.IO;
 
 namespace WebServiceInterface
@@ -46,13 +47,13 @@ namespace WebServiceInterface
         /// Invokes a method on the active SOAP web serice, returning its response.
         /// </summary>
         /// <param name="methodName">The name of the method to call on the web service.</param>
-        /// <param name="parameters">The paramaters to hand into the web method.</param>
+        /// <param name="arguments">The arguments to hand into the web method.</param>
         /// <returns>XML response from the soap web method.</returns>
-        public async Task<string> CallMethodAsync(string methodName, params object[] parameters)
+        public async Task<string> CallMethodAsync(Method method, params object[] arguments)
         {
             /* Create a webrequest to the desired SOAP service method, and create a soap envelope (with parameters) */
             HttpWebRequest webRequest = CreateSoapWebRequest(_serviceURL);
-            XmlDocument soapEnvelope = CreateSoapEnvelope(methodName, parameters);
+            XmlDocument soapEnvelope = CreateSoapEnvelope(method.Name, arguments);
 
             /* Save the soap envelope to the HTTP request */
             using (Stream stream = webRequest.GetRequestStream())
@@ -88,7 +89,7 @@ namespace WebServiceInterface
             return webRequest;
         }
 
-        private static XmlDocument CreateSoapEnvelope(string methodName, object[] parameters)
+        private static XmlDocument CreateSoapEnvelope(string methodName, object[] arguments)
         {
             XmlDocument soapEnvelope = new XmlDocument();
             string envelopeString = "<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +

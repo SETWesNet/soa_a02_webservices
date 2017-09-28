@@ -8,9 +8,11 @@ using WebServiceInterface.Library.WSDL;
 
 namespace WebServiceInterface
 {
-
-
-
+    enum MessageType
+    {
+        IN,
+        OUT
+    }
 
     class WSDLParser
     {
@@ -19,7 +21,6 @@ namespace WebServiceInterface
         private XmlNodeList _messageNodes;
         const string SOAP_IN_MESSAGE = "SoapIn";
         const string SOAP_OUT_MESSAGE = "SoapOut";
-
 
         public WSDLParser(XmlDocument wsdl)
         {
@@ -91,11 +92,11 @@ namespace WebServiceInterface
 
                 if (name.Contains(SOAP_IN_MESSAGE))
                 {
-                    message = container.ParameterMessage = new Message(name, "IN");
+                    message = container.ParameterMessage = new Message(name, MessageType.IN);
                 }
                else if (name.Contains(SOAP_OUT_MESSAGE))
                 {
-                    message = container.ResponseMessage = new Message(name, "OUT");
+                    message = container.ParameterMessage = new Message(name, MessageType.OUT);
                 }
 
                 message.parts = TransformParts(node);

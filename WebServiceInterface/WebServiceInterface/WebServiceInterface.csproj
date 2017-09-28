@@ -55,6 +55,10 @@
     <Compile Include="Library\Parameter.cs" />
     <Compile Include="Library\Method.cs" />
     <Compile Include="Library\SOAPWebService.cs" />
+    <Compile Include="Library\WSDL\MessageContainer.cs" />
+    <Compile Include="Library\WSDL\Message.cs" />
+    <Compile Include="Library\WSDL\Part.cs" />
+    <Compile Include="Library\WSDLParser.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

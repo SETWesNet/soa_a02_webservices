@@ -33,14 +33,15 @@
             this.grpboxMain = new System.Windows.Forms.GroupBox();
             this.btnSend = new System.Windows.Forms.Button();
             this.lblReturnValue = new System.Windows.Forms.Label();
-            this.richtxtReturnValue = new System.Windows.Forms.RichTextBox();
             this.grpboxParamters = new System.Windows.Forms.GroupBox();
             this.flwParameters = new System.Windows.Forms.FlowLayoutPanel();
             this.lblMethods = new System.Windows.Forms.Label();
             this.drpdwnMethods = new System.Windows.Forms.ComboBox();
             this.lblWebService = new System.Windows.Forms.Label();
+            this.grdviewResponse = new System.Windows.Forms.DataGridView();
             this.grpboxMain.SuspendLayout();
             this.grpboxParamters.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.grdviewResponse)).BeginInit();
             this.SuspendLayout();
             // 
             // drpdwnWebServices
@@ -58,9 +59,9 @@
             this.grpboxMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpboxMain.Controls.Add(this.grdviewResponse);
             this.grpboxMain.Controls.Add(this.btnSend);
             this.grpboxMain.Controls.Add(this.lblReturnValue);
-            this.grpboxMain.Controls.Add(this.richtxtReturnValue);
             this.grpboxMain.Controls.Add(this.grpboxParamters);
             this.grpboxMain.Controls.Add(this.lblMethods);
             this.grpboxMain.Controls.Add(this.drpdwnMethods);
@@ -92,18 +93,6 @@
             this.lblReturnValue.Size = new System.Drawing.Size(121, 20);
             this.lblReturnValue.TabIndex = 7;
             this.lblReturnValue.Text = "Return Value(s)";
-            // 
-            // richtxtReturnValue
-            // 
-            this.richtxtReturnValue.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.richtxtReturnValue.Location = new System.Drawing.Point(10, 403);
-            this.richtxtReturnValue.Name = "richtxtReturnValue";
-            this.richtxtReturnValue.ReadOnly = true;
-            this.richtxtReturnValue.Size = new System.Drawing.Size(626, 246);
-            this.richtxtReturnValue.TabIndex = 6;
-            this.richtxtReturnValue.Text = "Return Value Here";
             // 
             // grpboxParamters
             // 
@@ -161,6 +150,22 @@
             this.lblWebService.TabIndex = 1;
             this.lblWebService.Text = "Web Service";
             // 
+            // grdviewResponse
+            // 
+            this.grdviewResponse.AllowUserToAddRows = false;
+            this.grdviewResponse.AllowUserToDeleteRows = false;
+            this.grdviewResponse.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grdviewResponse.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.grdviewResponse.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
+            this.grdviewResponse.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.grdviewResponse.Location = new System.Drawing.Point(10, 404);
+            this.grdviewResponse.Name = "grdviewResponse";
+            this.grdviewResponse.RowTemplate.Height = 28;
+            this.grdviewResponse.Size = new System.Drawing.Size(620, 245);
+            this.grdviewResponse.TabIndex = 9;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -172,6 +177,7 @@
             this.grpboxMain.ResumeLayout(false);
             this.grpboxMain.PerformLayout();
             this.grpboxParamters.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.grdviewResponse)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -187,8 +193,8 @@
         private System.Windows.Forms.FlowLayoutPanel flwParameters;
         private System.Windows.Forms.GroupBox grpboxParamters;
         private System.Windows.Forms.Label lblReturnValue;
-        private System.Windows.Forms.RichTextBox richtxtReturnValue;
         private System.Windows.Forms.Button btnSend;
+        private System.Windows.Forms.DataGridView grdviewResponse;
     }
 }
 

@@ -50,7 +50,7 @@ namespace WebServiceInterface
         /// <param name="methodName">The name of the method to call on the web service.</param>
         /// <param name="arguments">The arguments to hand into the web method.</param>
         /// <returns>XML response from the soap web method.</returns>
-        public async Task<string> CallMethodAsync(Method method, params object[] arguments)
+        public async Task<string> CallMethodAsync(Method method, params SOAPArgument[] arguments)
         {
             /* Create a webrequest to the desired SOAP service method, and create a soap envelope (with parameters) */
             HttpWebRequest webRequest = CreateSoapWebRequest(_serviceURL);
@@ -62,22 +62,54 @@ namespace WebServiceInterface
                 soapEnvelope.Save(stream);
             }
 
-            string soapResponse = "";
-          
+            XmlDocument soapResponse = new XmlDocument();
+
             /* Send the request and receive the response back from the web service */
             using (WebResponse webResponse = await webRequest.GetResponseAsync())
             {
                 using (StreamReader rd = new StreamReader(webResponse.GetResponseStream()))
                 {
-                    soapResponse = await rd.ReadToEndAsync();
+                    soapResponse.LoadXml(await rd.ReadToEndAsync());
                 }
             }
-     
-            return soapResponse;
+
+            return soapResponse.InnerText;
+        }
+
+        /// <summary>
+        /// Creates an HTTPWebRequest object with the HTTP header information configured
+        /// to carry a SOAP payload using POST to the desried web service URL.
+        /// </summary>
+        /// <param name="serviceURL">The URL to deliver the POST request to.</param>
+        /// <returns>HTTPWebRequest object configured for SOAP.</returns>
+        private static HttpWebRequest CreateSoapWebRequest(string serviceURL)
+        {
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(serviceURL);
+            webRequest.ContentType = "application/soap+xml";
+            webRequest.Method = "POST";
+            return webRequest;
+        }
+
+        private static XmlDocument CreateSoapEnvelope(string methodName, SOAPArgument[] arguments)
+        {
+            XmlDocument soapEnvelope = new XmlDocument();
+            string envelopeString = "<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+                                    "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
+                                    "xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">" +
+                                    "<soap12:Body>";
+
+            envelopeString += "<GetAirportInformationByCountry xmlns=\"http://www.webserviceX.NET\">" +
+                              "<country></country>" +
+                              "</GetAirportInformationByCountry>" +
+                              "</soap12:Body>" +
+                              "</soap12:Envelope>";
+
+            soapEnvelope.LoadXml(envelopeString);
+
+            return soapEnvelope;
         }
 
         #region WSDL
-
 
         /// <summary>
         /// A method to "normalize" WSDL urls. If you pass it a page with .asmx it will append a "?WSDL" to the end. If another service is chosen it uses the .wsdl convention.
@@ -135,39 +167,5 @@ namespace WebServiceInterface
         }
 
         #endregion
-
-
-        /// <summary>
-        /// Creates an HTTPWebRequest object with the HTTP header information configured
-        /// to carry a SOAP payload using POST to the desried web service URL.
-        /// </summary>
-        /// <param name="serviceURL">The URL to deliver the POST request to.</param>
-        /// <returns>HTTPWebRequest object configured for SOAP.</returns>
-        private static HttpWebRequest CreateSoapWebRequest(string serviceURL)
-        {
-            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(serviceURL);
-            webRequest.ContentType = "application/soap+xml";
-            webRequest.Method = "POST";
-            return webRequest;
-        }
-
-        private static XmlDocument CreateSoapEnvelope(string methodName, object[] arguments)
-        {
-            XmlDocument soapEnvelope = new XmlDocument();
-            string envelopeString = "<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-                                    "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-                                    "xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">" +
-                                    "<soap12:Body>";
-           
-            envelopeString += "<GetAirportInformationByCountry xmlns=\"http://www.webserviceX.NET\">" + 
-                              "<country>Canada</country>" +
-                              "</GetAirportInformationByCountry>" +
-                              "</soap12:Body>" +
-                              "</soap12:Envelope>";
-
-            soapEnvelope.LoadXml(envelopeString);
-   
-            return soapEnvelope;
-        }
     }
 }

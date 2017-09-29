@@ -2,10 +2,13 @@
 using System.Windows.Forms;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using WebServiceInterface.Library;
 using System.Text.RegularExpressions;
 using System.Media;
 using System.Windows.Forms.Extensions;
+using System.Data;
+using System.IO;
 
 namespace WebServiceInterface
 {
@@ -13,6 +16,7 @@ namespace WebServiceInterface
     {
         private LibraryManager configLibrary = new LibraryManager("config.json");
         private ToolTip _errorTooltip = new ToolTip();
+
 
         public MainForm()
         {
@@ -54,7 +58,8 @@ namespace WebServiceInterface
         /// <summary>
         /// Deletes old parameter controls that are located in the flow layout and
         /// places new controls in their place, based on the parameters required for
-        /// the currently selected web service method.
+        /// the currently selected web service method. The controls Name property will
+        /// be set to the name of the parameter they take input for.
         /// </summary>
         private void CreateParameterControls()
         {
@@ -98,6 +103,39 @@ namespace WebServiceInterface
         }
 
         /// <summary>
+        /// Iterates through the parameter flow layout controls, associating all
+        /// values from textboxes and checkboxes with the parameter they were taking
+        /// input for by relating the name of the controls to the name of parameters of
+        /// the currently selected method.
+        /// </summary>
+        /// <returns>Arguments for the current selected method.</returns>
+        private SOAPArgument[] CollectMethodArguments()
+        {
+            List<SOAPArgument> arguments = new List<SOAPArgument>();
+            Method selectedMethod = configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+
+            /* Create argument objects by getting the value of the associated controls in the flow layout  */
+            foreach (Control control in flwParameters.Controls)
+            {
+                if (control is TextBox)
+                {
+                    SOAPArgument argument = new SOAPArgument();
+                    argument.Parameter = selectedMethod.Parameters.First(parameter => parameter.Name == control.Name);
+                    argument.Value = control.Text;
+                    arguments.Add(argument);
+                }
+                else if (control is CheckBox)
+                {
+                    SOAPArgument argument = new SOAPArgument();
+                    argument.Parameter = selectedMethod.Parameters.First(parameter => parameter.Name == control.Name);
+                    argument.Value = ((CheckBox)control).Checked.ToString();
+                    arguments.Add(argument);
+                }
+            }
+            return arguments.ToArray();
+        }
+
+        /// <summary>
         /// Validates the text value of a parameter textbox, ensuring that the value entered
         /// is satisfying the regex pattern for its corresponding parameter. If the regex 
         /// pattern for the parameter is not valid, an error message is displayed and the change
@@ -126,6 +164,48 @@ namespace WebServiceInterface
             }
         }
 
+        /// <summary>
+        /// Calls the currently selected web service method using the
+        /// arguments entered by the user, returning the SOAP response
+        /// as XML.
+        /// </summary>
+        /// <returns>The SOAP response XML.</returns>
+        private async Task<string> CallWebServiceMethod()
+        {
+            /* Get all the arguments entered by the user */
+            SOAPArgument[] arguments = CollectMethodArguments();
+
+            /* Get the currently selected method and call the web service method using user arguments (if any) */
+            Method selectedMethod = configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx?"); //TODO (Kyle): Make this not hardcoded
+            string soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
+
+            return soapResponse;
+        }
+
+        /// <summary>
+        /// Displays a SOAP response XML string in the forms
+        /// DataGridView area.
+        /// </summary>
+        /// <param name="soapResponse">A SOAP response string.</param>
+        private void DisplaySoapResponse(string soapResponse)
+        {
+            if (!string.IsNullOrEmpty(soapResponse))
+            {
+                /* Put the reponse into a table, if not already */
+                if (!soapResponse.Contains("<Table>"))
+                {
+                    soapResponse = soapResponse.Insert(0, "<Table>");
+                    soapResponse = soapResponse.Insert(soapResponse.Length, "</Table>");
+                }
+
+                /* Display the response in the data grid view */
+                DataSet dataSet = new DataSet();
+                dataSet.ReadXml(new StringReader(soapResponse));
+                grdviewResponse.DataSource = dataSet.Tables[0];
+            }
+        }
+
         #region Events Handlers
 
         private void TextChanged_RuleChecker(object sender, EventArgs e)
@@ -138,10 +218,8 @@ namespace WebServiceInterface
 
         private async void btnSend_Click(object sender, EventArgs e)
         {
-            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx");
-
-            // NOTE(c-jm): There was a bug here when trying to call method async. I think it is because we are sending null. Look into it tomorrow.
-            //richtxtReturnValue.Text = await webService.CallMethodAsync(null);
+            string response = await CallWebServiceMethod();
+            DisplaySoapResponse(response);
         }
 
         private void drpdwnWebServices_SelectionChangeCommitted(object sender, EventArgs e)

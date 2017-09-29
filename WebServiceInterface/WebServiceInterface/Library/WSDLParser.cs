@@ -36,26 +36,6 @@ namespace WebServiceInterface
             return (name.Contains(SOAP_IN_MESSAGE) || name.Contains(SOAP_OUT_MESSAGE));
         }
 
-
-        public List<Part> TransformParts(XmlNode messageNode)
-        {
-            List<Part> result = new List<Part>();
-
-            XmlNodeList parts = messageNode.ChildNodes;
-
-            foreach(XmlNode node in parts)
-            {
-                Part part = new Part();
-
-                part.name = node.Attributes["name"].InnerText;
-                part.type = node.Attributes["element"].InnerText;
-
-                result.Add(part);
-            }
-
-            return result;
-        }
-        
         private string TrimWSDLSoapMessage(string s)
         {
             string result = "";
@@ -73,41 +53,72 @@ namespace WebServiceInterface
         }
 
         /// <summary>
+        /// Transforms a wsdl:part XML structure into a WSDL.Part object.
+        /// </summary>
+        /// <param name="partXML"> The part we are transforming</param>
+        /// <returns></returns>
+        private Part TransformPartXmlToObject(XmlNode partXML)
+        {
+            Part part = new Part();
+
+            // TODO(c-jm): Add error handling here.
+            part.Name = partXML.Attributes["name"].InnerText;
+            part.Element = partXML.Attributes["element"].InnerText;
+
+            return part;
+        }
+        /// <summary>
+        /// Takes an XML node and transforms into a Message structure
+        /// </summary>
+        /// <param name="messageXML"> The node we are transforming</param>
+        /// <returns></returns>
+        private Message TransformMessageXmlToObject(XmlNode messageXML)
+        {
+            Message result = new Message();
+
+
+            // TODO(c-jm): Add error handling here.
+            result.name = messageXML.Attributes["name"].InnerText;
+
+            {
+                /* We map over all the child nodes of the message. (Which we know are wsdl:parts) and transform them into wsdl:part Objects */
+                result.parts = messageXML.ChildNodes.Cast<XmlNode>().Select(x => TransformPartXmlToObject(x)).ToList();
+            }
+            
+            return result;
+        }
+
+        /// <summary>
         /// Transform message structure 
         /// </summary>
         /// <returns></returns>
-        public Dictionary<string, MessageContainer> TransformMessages()
+        public List<MessageContainer> TransformMessages()
         {
-            Dictionary<string, MessageContainer> messages = new Dictionary<string, MessageContainer>();
+            /*
+             * First we filter the list down to just soap nodes. This goes through and checks each wsdl:message node to see if it is a soap node.
+             * This is important because web services offer a variety of different ways of interacting with their services.
+             * As we are purely a SOAP/WSDL based Web Service consumption tool, we only need to concern ourselves with the SOAP value.
+             */
+            IEnumerable<XmlNode> messageNodeCollection = _messageNodes.Cast<XmlNode>().Where(xmlNode => IsSoapNode(xmlNode));
 
-            foreach (XmlNode node in _messageNodes)
-            {
-                if (!IsSoapNode(node))
-                    continue;
+            /*
+             * Once we get a collection of MessageXML nodes we then have to generate a datastructure that represents them
+             * We map over the values applying hte TransformMessageXmlToObject function to each member of the collection.
+             * This will give us back a collection of Messages that is traversable. 
+             */
+            IEnumerable<Message> messageCollection = messageNodeCollection.Select(messageXml => TransformMessageXmlToObject(messageXml));
 
-                Message message = null;
-                string name = node.Attributes["name"].InnerText;
-                string key = TrimWSDLSoapMessage(name);
-                MessageContainer container = messages.ContainsKey(key) ? messages[key] : new MessageContainer();
+            /*
+             * We then have to group the messages together. This is due to the WSDL/SOAP format splitting up the typing based on a In parameter and a response.
+             * It would be easier in our datastructure if the messages were grouped by their key or name.
+             * As such we do a groupBy that goes through  TrimWSDLSoapMessage, which will remove the SoapIn Or SoapOut suffix. 
+             * The reason it works for grouping our elements together is that if we have a Trimmed message that is the same it knows
+             * that these are in the same category as it returns truthy. Which it groups by, we then cast our resultant groups into MessageContainers which have 
+             * a list of messages as well as a key themselves.
+             */
+            List<MessageContainer> messageContainers = messageCollection.GroupBy(message => TrimWSDLSoapMessage(message.name)).Select(g => new  MessageContainer(g.Key, g.ToList())).ToList();
 
-                if (name.Contains(SOAP_IN_MESSAGE))
-                {
-                    message = container.ParameterMessage = new Message(name, MessageType.IN);
-                }
-               else if (name.Contains(SOAP_OUT_MESSAGE))
-                {
-                    message = container.ParameterMessage = new Message(name, MessageType.OUT);
-                }
-
-                message.parts = TransformParts(node);
-
-                if (! messages.ContainsKey(key))
-                {
-                    messages.Add(key, container);
-                }
-            }
-
-            return messages;
+            return  messageContainers;
         }
     }
 }

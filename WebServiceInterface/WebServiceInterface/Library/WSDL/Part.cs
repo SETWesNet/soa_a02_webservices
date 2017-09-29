@@ -8,7 +8,7 @@ namespace WebServiceInterface.Library.WSDL
 {
     class Part
     {
-        public string name { get; set; }
-        public string type { get; set; }
+        public string Name { get; set; }
+        public string Element { get; set; }
     }
 }

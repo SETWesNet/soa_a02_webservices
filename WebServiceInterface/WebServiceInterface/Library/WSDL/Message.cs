@@ -9,13 +9,11 @@ namespace WebServiceInterface.Library.WSDL
     class Message
     {
         public string name;
-        public MessageType type;
         public List<Part> parts;
 
-        public Message(string name, MessageType type)
+        public Message()
         {
-            this.name = name;
-            this.type = type;
+            
         }
     }
 

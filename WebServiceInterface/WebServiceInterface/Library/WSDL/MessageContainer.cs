@@ -8,7 +8,13 @@ namespace WebServiceInterface.Library.WSDL
 {
     class MessageContainer
     {
-        public Message ParameterMessage { get; set; }
-        public Message ResponseMessage  { get; set; }
+        public string Key { get; set; }
+        public List<Message> Items;
+
+        public MessageContainer(string key, List<Message> items)
+        {
+            this.Key = key;
+            this.Items = items;
+        }
     }
 }

@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace WebServiceInterface.Library.WSDL
 {
-    class Part
+    class Type
     {
-        public string Name { get; set; }
-        public string Element { get; set; }
-
-        public List<TypeContainer> CorrespondingTypes;
+        public string Signature { get; set; }
+        public string Name { get; set; }   
     }
 }

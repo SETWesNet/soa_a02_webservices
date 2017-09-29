@@ -14,11 +14,26 @@ namespace WebServiceInterface
         OUT
     }
 
+    class Type
+    {
+        public string Name { get; set; }
+        public string Signature { get; set; }
+    }
+
+    class TypeContainer
+    {
+        public string Key { get; set; }
+        public List<Type> Items;
+    }
+
     class WSDLParser
     {
         private XmlDocument _wsdlRaw;
         private XmlNodeList _operationNodes;
         private XmlNodeList _messageNodes;
+        private XmlNodeList _typeNodes;
+
+
         const string SOAP_IN_MESSAGE = "SoapIn";
         const string SOAP_OUT_MESSAGE = "SoapOut";
 
@@ -27,6 +42,7 @@ namespace WebServiceInterface
             _wsdlRaw = wsdl;
             _operationNodes = _wsdlRaw.GetElementsByTagName("wsdl:operation");
             _messageNodes   = _wsdlRaw.GetElementsByTagName("wsdl:message");
+            _typeNodes      = _wsdlRaw.GetElementsByTagName("s:schema");
         }
 
         private bool IsSoapNode(XmlNode node)
@@ -83,11 +99,72 @@ namespace WebServiceInterface
             {
                 /* We map over all the child nodes of the message. (Which we know are wsdl:parts) and transform them into wsdl:part Objects */
                 result.parts = messageXML.ChildNodes.Cast<XmlNode>().Select(x => TransformPartXmlToObject(x)).ToList();
+
             }
             
             return result;
         }
 
+        private Type TransformTypeXmlToObject(XmlNode type)
+        {
+            Type result = new Type();
+
+            result.Name = type.Attributes["name"].InnerText;
+            result.Signature = type.Attributes["type"].InnerText;
+            
+            return result;
+        }
+
+        private TypeContainer TransformComplexTypeXmlToObject(XmlNode sElement)
+        {
+            TypeContainer result = new TypeContainer();
+
+            result.Key = sElement.Attributes["name"].InnerText;
+
+            XmlNode sequence = sElement.ChildNodes.Cast<XmlNode>().First(e => IsComplexType(e))
+                                   .ChildNodes.Cast<XmlNode>().First(e => IsSSequence(e));
+
+            result.Items = sequence.ChildNodes.Cast<XmlNode>().Select(e => TransformTypeXmlToObject(e)).ToList();
+
+            return result;
+        }
+
+
+        private bool IsSSequence(XmlNode n)
+        {
+            const string S_ELEMENT_IDENTIFIER = "s:sequence";
+            return n.Name == S_ELEMENT_IDENTIFIER;
+        }
+        private bool IsSElement(XmlNode n)
+        {
+            const string S_ELEMENT_IDENTIFIER = "s:element";
+            return n.Name == S_ELEMENT_IDENTIFIER;
+        }
+
+        private bool IsSSchema(XmlNode n)
+        {
+            const string S_SCHEMA_IDENTIFIER = "s:schema";
+            return n.Name == S_SCHEMA_IDENTIFIER;
+        }
+        private bool IsComplexType(XmlNode n)
+        {
+            const string COMPLEX_TYPE_IDENTIFIER = "s:complexType";
+            return n.Name == COMPLEX_TYPE_IDENTIFIER;
+        }
+
+
+        private List<TypeContainer> TransformTypes()
+        {
+            XmlNode schemaNode = _typeNodes.Cast<XmlNode>().First(e => IsSSchema(e));
+
+            IEnumerable<XmlNode> sElements = schemaNode.ChildNodes
+                                                .Cast<XmlNode>().Where(e => IsSElement(e))  ;
+
+            List<TypeContainer> typeContainers = sElements.Select(e => TransformComplexTypeXmlToObject(e)).ToList();
+
+            return typeContainers;
+        }
+        
         /// <summary>
         /// Transform message structure 
         /// </summary>
@@ -118,9 +195,10 @@ namespace WebServiceInterface
              */
             List<MessageContainer> messageContainers = messageCollection.GroupBy(message => TrimWSDLSoapMessage(message.name)).Select(g => new  MessageContainer(g.Key, g.ToList())).ToList();
 
+            TransformTypes();
+
+
             return  messageContainers;
         }
     }
 }
-
-

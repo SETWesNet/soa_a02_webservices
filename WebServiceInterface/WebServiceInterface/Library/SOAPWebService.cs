@@ -99,7 +99,7 @@ namespace WebServiceInterface
                                     "<soap12:Body>";
 
             envelopeString += "<GetAirportInformationByCountry xmlns=\"http://www.webserviceX.NET\">" +
-                              "<country></country>" +
+                              "<country>United States</country>" +
                               "</GetAirportInformationByCountry>" +
                               "</soap12:Body>" +
                               "</soap12:Envelope>";

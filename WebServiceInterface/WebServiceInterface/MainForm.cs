@@ -3,66 +3,137 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Collections.Generic;
 using WebServiceInterface.Library;
-using System.Xml;
+using System.Text.RegularExpressions;
+using System.Media;
+using System.Windows.Forms.Extensions;
 
 namespace WebServiceInterface
 {
     public partial class MainForm : Form
     {
-        private LibraryManager configLibrary;
-        private string configPath;
+        private LibraryManager configLibrary = new LibraryManager("config.json");
+        private ToolTip _errorTooltip = new ToolTip();
 
         public MainForm()
         {
             InitializeComponent();
-            configPath = "config.json";
-            configLibrary = new LibraryManager(configPath);
-        }
 
-        /// <summary>
-        /// Creates the parameter controls.
-        /// </summary>
-        private void CreateParameterControls()
-        {
-            /* Get a list of all current parameter controls */
-            List<Control> listControls = flwParameters.Controls.Cast<Control>().ToList();
-
-            /* Remove each parameter control from the flow layout */
-            foreach (Control control in listControls)
-            {
-                flwParameters.Controls.Remove(control);
-                control.Dispose();
-            }
-
-            /* Get the current web service method being targeted */
-            Method[] methods = (Method[])drpdwnMethods.DataSource;
-            Method selectedMethod = methods.First(m => m.Name == (string)drpdwnMethods.SelectedValue);
-
-            /* Create controls for parameter value input in the flow layout */
-            foreach (Parameter param in selectedMethod.Parameters)
-            {
-                Label paramLabel = new Label();
-                paramLabel.Text = param.Name;
-
-                TextBox paramTextBox = new TextBox();
-                paramTextBox.Name = param.Name;
-
-                flwParameters.Controls.Add(paramLabel);
-                flwParameters.Controls.Add(paramTextBox);
-            }
-        }
-
-        #region Events Handlers
-
-        private void MainForm_Load(object sender, EventArgs e)
-        {
+            /* Initialize Drop Downs */
             drpdwnWebServices.DisplayMember = nameof(WebService.Name);
             drpdwnWebServices.ValueMember = nameof(WebService.Url);
             drpdwnWebServices.DataSource = configLibrary.Services;
 
             drpdwnMethods.DisplayMember = nameof(Method.Name);
             drpdwnMethods.ValueMember = nameof(Method.Name);
-            drpdwnMethods.DataSource = configLibrary.GetAvailableMethods((string)drpdwnWebServices.SelectedValue);
+            WebService selectedService = configLibrary.GetService(SelectedWebServiceURL);
+            drpdwnMethods.DataSource = selectedService.Methods;
+        }
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the web service URL for the web service currently
+        /// selected in the web services dropdown.
+        /// </summary>
+        private string SelectedWebServiceURL
+        {
+            get => (string)drpdwnWebServices.SelectedValue;
+        }
+
+        /// <summary>
+        /// Gets the name of the method currently selected in the
+        /// method dropdown.
+        /// </summary>
+        private string SelectedMethodName
+        {
+            get => (string)drpdwnMethods.SelectedValue;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Deletes old parameter controls that are located in the flow layout and
+        /// places new controls in their place, based on the parameters required for
+        /// the currently selected web service method.
+        /// </summary>
+        private void CreateParameterControls()
+        {
+            /* Hide the tooltip if showing on any controls (bug in .NET, will
+             * crash if the object it is displaying on is disposed beore fade out). */
+            foreach (Control control in flwParameters.Controls)
+            {
+                _errorTooltip.Hide(control);
+            }
+
+            /* Dispose all controls from flow layout and get current selected method */
+            flwParameters.Controls.DisposeAll();
+            Method selectedMethod = configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+
+            /* Create input controls for parameters, assign textchanged event for validation for textbox */
+            foreach (Parameter param in selectedMethod.Parameters)
+            {
+                Control paramInputControl = null;
+                bool paramIsBoolean = string.Equals(param.Type, "bool", StringComparison.OrdinalIgnoreCase);
+
+                if (paramIsBoolean)
+                {
+                    paramInputControl = new CheckBox();
+                    paramInputControl.Text = string.Format("{0} ({1})", param.Name, param.Type);
+                }
+                else
+                {
+                    Label textBoxLabel = new Label();
+                    textBoxLabel.Text = string.Format("{0} ({1})", param.Name, param.Type);
+                    flwParameters.Controls.Add(textBoxLabel);
+
+                    paramInputControl = new TextBox();
+                    ((TextBox)paramInputControl).ShortcutsEnabled = false;
+                    paramInputControl.TextChanged += TextChanged_RuleChecker;
+                }
+
+                /* Name control based on the parameter it takes input for, put into flow layout */
+                paramInputControl.Name = param.Name;
+                flwParameters.Controls.Add(paramInputControl);
+            }
+        }
+
+        /// <summary>
+        /// Validates the text value of a parameter textbox, ensuring that the value entered
+        /// is satisfying the regex pattern for its corresponding parameter. If the regex 
+        /// pattern for the parameter is not valid, an error message is displayed and the change
+        /// reverted.
+        /// </summary>
+        /// <param name="parameterTextBox">A textbox with the name corresponding to the name of a parameter.</param>
+        private void ValidateParameterTextBox(TextBox parameterTextBox)
+        {
+            /* Use the name of the textbox to get the corresponding parameter it is taking input for */
+            Parameter parameter = configLibrary.GetParameter(SelectedWebServiceURL,
+                SelectedMethodName, parameterTextBox.Name);
+
+            /* If there is a regex pattern for the paramater and text to validate, do so */
+            if (!string.IsNullOrEmpty(parameterTextBox.Text) &&
+                !string.IsNullOrEmpty(parameter.Regex) &&
+                !Regex.IsMatch(parameterTextBox.Text, parameter.Regex))
+            {
+                /* If invalid data was entered, remove last invalid character and keep cursor position */
+                int originalSelectionStart = parameterTextBox.SelectionStart - 1;
+                parameterTextBox.Text = parameterTextBox.Text.Remove(parameterTextBox.SelectionStart - 1, 1);
+                parameterTextBox.SelectionStart = originalSelectionStart;
+
+                SystemSounds.Exclamation.Play();
+                _errorTooltip.Show(parameter.ErrorMessage, parameterTextBox,
+                    parameterTextBox.Width, parameterTextBox.Height / 2, 2000);
+            }
+        }
+
+        #region Events Handlers
+
+        private void TextChanged_RuleChecker(object sender, EventArgs e)
+        {
+            if (sender is TextBox)
+            {
+                ValidateParameterTextBox((TextBox)sender);
+            }
         }
 
         private async void btnSend_Click(object sender, EventArgs e)
@@ -75,7 +146,8 @@ namespace WebServiceInterface
 
         private void drpdwnWebServices_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            drpdwnMethods.DataSource = configLibrary.GetAvailableMethods((string)drpdwnWebServices.SelectedValue);
+            WebService selectedService = configLibrary.GetService(SelectedWebServiceURL);
+            drpdwnMethods.DataSource = selectedService.Methods;
         }
 
         private void drpdwnMethods_SelectedIndexChanged(object sender, EventArgs e)

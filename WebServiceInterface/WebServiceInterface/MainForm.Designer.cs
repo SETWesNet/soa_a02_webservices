@@ -128,7 +128,6 @@
             this.flwParameters.Name = "flwParameters";
             this.flwParameters.Size = new System.Drawing.Size(614, 268);
             this.flwParameters.TabIndex = 4;
-            this.flwParameters.WrapContents = false;
             // 
             // lblMethods
             // 
@@ -170,7 +169,6 @@
             this.Controls.Add(this.grpboxMain);
             this.Name = "MainForm";
             this.Text = "Web Service Interface";
-            this.Load += new System.EventHandler(this.MainForm_Load);
             this.grpboxMain.ResumeLayout(false);
             this.grpboxMain.PerformLayout();
             this.grpboxParamters.ResumeLayout(false);

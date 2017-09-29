@@ -21,19 +21,24 @@ namespace WebServiceInterface.Library
             {
                 return _services;
             }
-        } 
+        }
 
         public WebService GetService(string serviceURL)
         {
             return _services.First(service => service.Url == serviceURL);
         }
 
-        public Method[] GetAvailableMethods(string serviceURL)
+        public Method GetMethod(string serviceURL, string methodName)
         {
-            WebService service = GetService(serviceURL);
-
-            return service.Methods;
+            return _services.First(service => service.Url == serviceURL)
+                .Methods.First(method => method.Name == methodName);
         }
 
+        public Parameter GetParameter(string serviceURL, string methodName, string parameterName)
+        {
+            return _services.First(service => service.Url == serviceURL)
+                .Methods.First(method => method.Name == methodName)
+                .Parameters.First(parameter => parameter.Name == parameterName);
+        }
     }
 }

@@ -14,6 +14,7 @@ namespace WebServiceInterface.Library.WSDL
         public WSDLPort Port { get; set; }
         public List<WSDLOperation> Operations { get; set; }
 
+
         public WSDLInformation()
         {
             Service = new WSDLService();
@@ -26,40 +27,80 @@ namespace WebServiceInterface.Library.WSDL
             return Operations.Cast<WSDLOperation>().First(o => o.Name == name) ;
         }
 
+        public WSDLOperation FindOperationByMessage(string message)
+        {
+            WSDLOperation result = null;
+
+            result = message.Contains("Response") ? Operations.Cast<WSDLOperation>().First(o => o.OutputMessage.Replace("tns:", "") == message) : 
+                                                    Operations.Cast<WSDLOperation>().First(o => o.InputMessage.Replace("tns:", "") == message);
+
+            return result;
+        }
+
         public string GetParameterTypeByName(string param)
         {
             string result = "";
 
-            if (param.Contains("SoapIn"))
-            {
-                result = "IN";
-            }
-            else if (param.Contains("SoapOut"))
+            if (param.Contains("SoapOut") || param.Contains("Response"))
             {
                 result = "OUT";
+            }
+            else
+            {
+                result = "IN";
             }
 
             return result;
         }
 
-        public WSDLOperation FindOperationByParameter(string input)
+        /// <summary>
+        /// Finds an operation by its parameter name
+        /// </summary>
+        /// <param name="input">The name of the </param>
+        /// <returns></returns>
+        public WSDLOperation FindOperationByParameter(string parameter)
         {
 
             WSDLOperation result = null;
 
-            if (input.Contains("SoapIn"))
+            if (parameter.Contains("SoapIn"))
             {
-                result = Operations.Cast<WSDLOperation>().First(o => o.Input.Replace("tns:", "") == input);
+                result = Operations.Cast<WSDLOperation>().First(o => o.Input.Replace("tns:", "") == parameter);
             }
-            else if (input.Contains("SoapOut"))
+            else if (parameter.Contains("SoapOut"))
             {
-                result = Operations.Cast<WSDLOperation>().First(o => o.Output.Replace("tns:", "") == input);
+                result = Operations.Cast<WSDLOperation>().First(o => o.Output.Replace("tns:", "") == parameter);
             }
 
-            // TODO(c-jm): Replace this with a helper method in a static class
             return result;
         }
-               
-    }
 
+        /// <summary>
+        ///  Goes through WSDL operations and applies stores the type information in relation to that operation.
+        /// <param name="typeInformation"> The list of type information to iterate through</param>
+        /// <returns></returns>
+        public WSDLInformation ApplyTypeInformation(WSDLInformation information,  List<WSDLTypeInformation> typeInformation)
+        {
+            foreach(WSDLTypeInformation current in typeInformation)
+            {
+                WSDLOperation currentInfo = null;
+
+                currentInfo = information.FindOperationByMessage(current.Name);
+
+                string type = information.GetParameterTypeByName(current.Name);
+
+                if (type == "IN")
+                {
+                    currentInfo.InputTypeInformation = current;
+                }
+                else if (type == "OUT")
+                {
+                    currentInfo.OutputTypeInformation = current;
+
+                }
+            }
+
+            return information;
+        }
+    }
 }

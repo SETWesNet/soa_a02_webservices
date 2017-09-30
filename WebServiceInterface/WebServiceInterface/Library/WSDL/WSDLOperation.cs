@@ -13,16 +13,21 @@ namespace WebServiceInterface.Library.WSDL
 
         public string Input { get; set; }
         public string InputMessage { get; set; }
+
+        public WSDLTypeInformation InputTypeInformation { get; set; }
+
         public string Output { get; set; }
         public string OutputMessage { get; set; }
+
+        public WSDLTypeInformation OutputTypeInformation { get; set; }
         public string Documentation { get; set; }
 
         public WSDLOperation(string name, string soapAction)
         {
             this.Name = name;
             this.SoapAction = soapAction;
-            this.Input = "";
-            this.Output = "";
+            this.InputTypeInformation = new WSDLTypeInformation();
+            this.OutputTypeInformation = new WSDLTypeInformation();
         }
     }
 }

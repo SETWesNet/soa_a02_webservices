@@ -163,13 +163,20 @@ namespace WebServiceInterface
                     typeInformation.Name = parent.Attributes["name"].InnerText; 
                 }
 
-                typeInformation.Types = complexType.ChildNodes.Cast<XmlNode>()
-                           .First(e => e.Name == "s:sequence")
-                           .ChildNodes.Cast<XmlNode>()
-                           .Where(e => e.Name == "s:element")
-                           .Select(e => new WSDLType(e.Attributes["name"].InnerText, e.Attributes["type"].InnerText))
-                           .Cast<WSDLType>()
-                           .ToList();
+                XmlNode sequence = complexType.ChildNodes.Cast<XmlNode>().FirstOrDefault(e => e.Name == "s:sequence");
+
+                if (sequence == null)
+                {
+                    WSDLType type = new WSDLType("N/A", "N/A");
+                }
+                else
+                {
+                    typeInformation.Types = sequence.ChildNodes.Cast<XmlNode>()
+                               .Where(e => e.Name == "s:element")
+                               .Select(e => new WSDLType(e.Attributes["name"].InnerText, e.Attributes["type"].InnerText))
+                               .Cast<WSDLType>()
+                               .ToList();
+                }
 
                 result.Add(typeInformation);
             }

@@ -10,5 +10,6 @@ namespace WebServiceInterface.Library.WSDL
     {
         public string Name { get; set; }
         public string Binding { get; set; }
+        public string Location { get; set; }
     }
-}
+ }

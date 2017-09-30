@@ -37,6 +37,11 @@ namespace WebServiceInterface
             return s.Replace("tns:", "");
         }
 
+        /// <summary>
+        /// Gets the SOAP12 port for 
+        /// </summary>
+        /// <param name="info"></param>
+        /// <returns></returns>
         public WSDLInformation GetPort(WSDLInformation info)
         {
             WSDLPort port = new WSDLPort();
@@ -57,8 +62,13 @@ namespace WebServiceInterface
             {
                 if (portNode.Attributes["name"] != null && portNode.Attributes["binding"] != null)
                 {
-                    info.Port.Name = TrimNamespace(portNode.Attributes["name"].Value);
+                    info.Port.Name =    TrimNamespace(portNode.Attributes["name"].Value);
                     info.Port.Binding = TrimNamespace(portNode.Attributes["binding"].InnerText);
+
+                    if (portNode.FirstChild.Attributes["location"] != null)
+                    {
+                        info.Port.Location = portNode.FirstChild.Attributes["location"].InnerText;
+                    }
                 }
             }
             else
@@ -165,11 +175,7 @@ namespace WebServiceInterface
 
                 XmlNode sequence = complexType.ChildNodes.Cast<XmlNode>().FirstOrDefault(e => e.Name == "s:sequence");
 
-                if (sequence == null)
-                {
-                    WSDLType type = new WSDLType("N/A", "N/A");
-                }
-                else
+                if (sequence != null)
                 {
                     typeInformation.Types = sequence.ChildNodes.Cast<XmlNode>()
                                .Where(e => e.Name == "s:element")
@@ -183,6 +189,17 @@ namespace WebServiceInterface
 
             return result;
         }
+        public WSDLInformation BuildWSDLInformation(WSDLInformation information)
+        {
+            information = GetPort(information);
+            information = GetOperations(information);
+            information = GetPortTypes(information);
+            information = GetMessages(information);
+
+            return information;
+        }
+
+
     }
 }
 

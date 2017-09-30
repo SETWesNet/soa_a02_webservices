@@ -79,15 +79,15 @@ namespace WebServiceInterface.Library.WSDL
         ///  Goes through WSDL operations and applies stores the type information in relation to that operation.
         /// <param name="typeInformation"> The list of type information to iterate through</param>
         /// <returns></returns>
-        public WSDLInformation ApplyTypeInformation(WSDLInformation information,  List<WSDLTypeInformation> typeInformation)
+        public void ApplyTypeInformation( List<WSDLTypeInformation> typeInformation)
         {
             foreach(WSDLTypeInformation current in typeInformation)
             {
                 WSDLOperation currentInfo = null;
 
-                currentInfo = information.FindOperationByMessage(current.Name);
+                currentInfo = FindOperationByMessage(current.Name);
 
-                string type = information.GetParameterTypeByName(current.Name);
+                string type = GetParameterTypeByName(current.Name);
 
                 if (type == "IN")
                 {
@@ -99,8 +99,6 @@ namespace WebServiceInterface.Library.WSDL
 
                 }
             }
-
-            return information;
         }
     }
 }

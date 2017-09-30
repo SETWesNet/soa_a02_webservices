@@ -50,14 +50,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extension Methods\ControlCollectionExtensions.cs" />
     <Compile Include="Library\LibraryManager.cs" />
-    <Compile Include="Library\ServiceInfo.cs" />
     <Compile Include="Library\Parameter.cs" />
     <Compile Include="Library\Method.cs" />
+    <Compile Include="Library\SOAPArgument.cs" />
     <Compile Include="Library\SOAPWebService.cs" />
-    <Compile Include="Library\WSDL\MessageContainer.cs" />
-    <Compile Include="Library\WSDL\Message.cs" />
-    <Compile Include="Library\WSDL\Part.cs" />
+    <Compile Include="Library\WebService.cs" />
     <Compile Include="Library\WSDLParser.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

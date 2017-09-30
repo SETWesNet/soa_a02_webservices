@@ -4,201 +4,226 @@ using System.Text;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using WebServiceInterface.Library.WSDL;
+using WebServiceInterface.Library;
 
 namespace WebServiceInterface
 {
-    enum MessageType
+    class WSDLInformation
     {
-        IN,
-        OUT
-    }
+        public string BaseName { get; set; }
 
-    class Type
+        public WSDLService Service { get; set; }
+        public WSDLPort Port { get; set; }
+        public List<WSDLOperation> Operations { get; set; }
+
+        public WSDLInformation()
+        {
+            Service = new WSDLService();
+            Port = new WSDLPort();
+            Operations = new List<WSDLOperation>();
+        }
+
+        public WSDLOperation FindOperationByName(string name)
+        {
+            return Operations.Cast<WSDLOperation>().First(o => o.Name == name) ;
+        }
+
+        public string GetParameterTypeByName(string param)
+        {
+            string result = "";
+
+            if (param.Contains("SoapIn"))
+            {
+                result = "IN";
+            }
+            else if (param.Contains("SoapOut"))
+            {
+                result = "OUT";
+            }
+
+            return result;
+        }
+
+        public WSDLOperation FindOperationByParameter(string input)
+        {
+
+            WSDLOperation result = null;
+
+            if (input.Contains("SoapIn"))
+            {
+                result = Operations.Cast<WSDLOperation>().First(o => o.Input.Replace("tns:", "") == input);
+            }
+            else if (input.Contains("SoapOut"))
+            {
+                result = Operations.Cast<WSDLOperation>().First(o => o.Output.Replace("tns:", "") == input);
+            }
+
+            // TODO(c-jm): Replace this with a helper method in a static class
+            return result;
+        }
+               
+    }
+    class WSDLOperation
     {
         public string Name { get; set; }
-        public string Signature { get; set; }
-    }
+        public string SoapAction { get; set; }
 
-    class TypeContainer
+        public string Input { get; set; }
+        public string InputMessage { get; set; }
+        public string Output { get; set; }
+        public string OutputMessage { get; set; }
+        public string Documentation { get; set; }
+
+        public WSDLOperation(string name, string soapAction)
+        {
+            this.Name = name;
+            this.SoapAction = soapAction;
+            this.Input = "";
+            this.Output = "";
+        }
+    }
+    class WSDLService
     {
-        public string Key { get; set; }
-        public List<Type> Items;
+        public string Name { get; set; }
+    }
+    class WSDLPort
+    {
+        public string Name { get; set; }
+        public string Binding { get; set; }
     }
 
     class WSDLParser
     {
         private XmlDocument _wsdlRaw;
-        private XmlNodeList _operationNodes;
+        private XmlNodeList _portNodes;
+        private XmlNodeList _bindingNodes;
+        private XmlNodeList _portTypeNodes;
         private XmlNodeList _messageNodes;
-        private XmlNodeList _typeNodes;
 
 
-        const string SOAP_IN_MESSAGE = "SoapIn";
-        const string SOAP_OUT_MESSAGE = "SoapOut";
+        const string SOAP_SUFFIX = "Soap";
+        const string SOAP_12_SUFFIX = "Soap12";
 
         public WSDLParser(XmlDocument wsdl)
         {
             _wsdlRaw = wsdl;
-            _operationNodes = _wsdlRaw.GetElementsByTagName("wsdl:operation");
-            _messageNodes   = _wsdlRaw.GetElementsByTagName("wsdl:message");
-            _typeNodes      = _wsdlRaw.GetElementsByTagName("s:schema");
+            _portNodes =     _wsdlRaw.GetElementsByTagName("wsdl:port");
+            _bindingNodes =  _wsdlRaw.GetElementsByTagName("wsdl:binding");
+            _portTypeNodes = _wsdlRaw.GetElementsByTagName("wsdl:portType");
+            _messageNodes = _wsdlRaw.GetElementsByTagName("wsdl:message");
         }
 
-        private bool IsSoapNode(XmlNode node)
+        private string TrimNamespace(string s)
         {
-            string name = node.Attributes["name"].InnerText;
-
-            return (name.Contains(SOAP_IN_MESSAGE) || name.Contains(SOAP_OUT_MESSAGE));
+            return s.Replace("tns:", "");
         }
-
-        private string TrimWSDLSoapMessage(string s)
+        public WSDLInformation GetPort(WSDLInformation info)
         {
-            string result = "";
+            WSDLPort port = new WSDLPort();
 
-            if (s.Contains(SOAP_IN_MESSAGE))
+            XmlNode first = _portNodes.Cast<XmlNode>().First().ParentNode;
+
+            if (first.Attributes["name"] != null)
             {
-                result = s.Replace(SOAP_IN_MESSAGE, "");
-            }
-            else if (s.Contains(SOAP_OUT_MESSAGE))
-            {
-                result = s.Replace(SOAP_OUT_MESSAGE, "");
+                info.Service.Name = first.Attributes["name"].InnerText;
+                info.BaseName = info.Service.Name;
             }
 
-            return result;
-        }
+            string portKey = info.Service.Name += SOAP_12_SUFFIX;
 
-        /// <summary>
-        /// Transforms a wsdl:part XML structure into a WSDL.Part object.
-        /// </summary>
-        /// <param name="partXML"> The part we are transforming</param>
-        /// <returns></returns>
-        private Part TransformPartXmlToObject(XmlNode partXML)
-        {
-            Part part = new Part();
+            XmlNode portNode = _portNodes.Cast<XmlNode>().First(p => p.Attributes["name"].InnerText == portKey);
 
-            // TODO(c-jm): Add error handling here.
-            part.Name = partXML.Attributes["name"].InnerText;
-            part.Element = partXML.Attributes["element"].InnerText;
-
-            return part;
-        }
-        /// <summary>
-        /// Takes an XML node and transforms into a Message structure
-        /// </summary>
-        /// <param name="messageXML"> The node we are transforming</param>
-        /// <returns></returns>
-        private Message TransformMessageXmlToObject(XmlNode messageXML)
-        {
-            Message result = new Message();
-
-
-            // TODO(c-jm): Add error handling here.
-            result.name = messageXML.Attributes["name"].InnerText;
-
+            if (portNode != null)
             {
-                /* We map over all the child nodes of the message. (Which we know are wsdl:parts) and transform them into wsdl:part Objects */
-                result.parts = messageXML.ChildNodes.Cast<XmlNode>().Select(x => TransformPartXmlToObject(x)).ToList();
-
+                if (portNode.Attributes["name"] != null && portNode.Attributes["binding"] != null)
+                {
+                    info.Port.Name = TrimNamespace(portNode.Attributes["name"].Value);
+                    info.Port.Binding = TrimNamespace(portNode.Attributes["binding"].InnerText);
+                }
             }
-            
-            return result;
-        }
+            else
+            {
+                string message = String.Format("Couldn't find wsdl:port {0}", portKey);
+                throw new Exception(message);
+            }
 
-        private Type TransformTypeXmlToObject(XmlNode type)
-        {
-            Type result = new Type();
-
-            result.Name = type.Attributes["name"].InnerText;
-            result.Signature = type.Attributes["type"].InnerText;
-            
-            return result;
-        }
-
-        private TypeContainer TransformComplexTypeXmlToObject(XmlNode sElement)
-        {
-            TypeContainer result = new TypeContainer();
-
-            result.Key = sElement.Attributes["name"].InnerText;
-
-            XmlNode sequence = sElement.ChildNodes.Cast<XmlNode>().First(e => IsComplexType(e))
-                                   .ChildNodes.Cast<XmlNode>().First(e => IsSSequence(e));
-
-            result.Items = sequence.ChildNodes.Cast<XmlNode>().Select(e => TransformTypeXmlToObject(e)).ToList();
-
-            return result;
-        }
-
-
-        private bool IsSSequence(XmlNode n)
-        {
-            const string S_ELEMENT_IDENTIFIER = "s:sequence";
-            return n.Name == S_ELEMENT_IDENTIFIER;
-        }
-        private bool IsSElement(XmlNode n)
-        {
-            const string S_ELEMENT_IDENTIFIER = "s:element";
-            return n.Name == S_ELEMENT_IDENTIFIER;
-        }
-
-        private bool IsSSchema(XmlNode n)
-        {
-            const string S_SCHEMA_IDENTIFIER = "s:schema";
-            return n.Name == S_SCHEMA_IDENTIFIER;
-        }
-        private bool IsComplexType(XmlNode n)
-        {
-            const string COMPLEX_TYPE_IDENTIFIER = "s:complexType";
-            return n.Name == COMPLEX_TYPE_IDENTIFIER;
-        }
-
-
-        private List<TypeContainer> TransformTypes()
-        {
-            XmlNode schemaNode = _typeNodes.Cast<XmlNode>().First(e => IsSSchema(e));
-
-            IEnumerable<XmlNode> sElements = schemaNode.ChildNodes
-                                                .Cast<XmlNode>().Where(e => IsSElement(e))  ;
-
-            List<TypeContainer> typeContainers = sElements.Select(e => TransformComplexTypeXmlToObject(e)).ToList();
-
-            return typeContainers;
+            return info;
         }
         
-        /// <summary>
-        /// Transform message structure 
-        /// </summary>
-        /// <returns></returns>
-        public List<MessageContainer> TransformMessages()
+        public WSDLInformation GetOperations(WSDLInformation info)
         {
-            /*
-             * First we filter the list down to just soap nodes. This goes through and checks each wsdl:message node to see if it is a soap node.
-             * This is important because web services offer a variety of different ways of interacting with their services.
-             * As we are purely a SOAP/WSDL based Web Service consumption tool, we only need to concern ourselves with the SOAP value.
-             */
-            IEnumerable<XmlNode> messageNodeCollection = _messageNodes.Cast<XmlNode>().Where(xmlNode => IsSoapNode(xmlNode));
+            string binding = info.Port.Binding;
+            XmlNode bindingNode = _bindingNodes.Cast<XmlNode>().First(e => e.Attributes["name"].InnerText == binding);
 
-            /*
-             * Once we get a collection of MessageXML nodes we then have to generate a datastructure that represents them
-             * We map over the values applying hte TransformMessageXmlToObject function to each member of the collection.
-             * This will give us back a collection of Messages that is traversable. 
-             */
-            IEnumerable<Message> messageCollection = messageNodeCollection.Select(messageXml => TransformMessageXmlToObject(messageXml));
+            info.Operations =  bindingNode.ChildNodes.Cast<XmlNode>()
+                               .Where(e => e.Name == "wsdl:operation")
+                               .Select(e => new WSDLOperation(e.Attributes["name"].InnerText, e.FirstChild.Attributes["soapAction"].InnerText))
+                               .ToList();
 
-            /*
-             * We then have to group the messages together. This is due to the WSDL/SOAP format splitting up the typing based on a In parameter and a response.
-             * It would be easier in our datastructure if the messages were grouped by their key or name.
-             * As such we do a groupBy that goes through  TrimWSDLSoapMessage, which will remove the SoapIn Or SoapOut suffix. 
-             * The reason it works for grouping our elements together is that if we have a Trimmed message that is the same it knows
-             * that these are in the same category as it returns truthy. Which it groups by, we then cast our resultant groups into MessageContainers which have 
-             * a list of messages as well as a key themselves.
-             */
-            List<MessageContainer> messageContainers = messageCollection.GroupBy(message => TrimWSDLSoapMessage(message.name)).Select(g => new  MessageContainer(g.Key, g.ToList())).ToList();
+            return info;
+        }
 
-            TransformTypes();
+        public WSDLInformation GetPortTypes(WSDLInformation info)
+        {
+            string portTypeKey = info.BaseName += SOAP_SUFFIX;
 
+            XmlNode portTypeNode = _portTypeNodes.Cast<XmlNode>()
+                                       .First(portType => portType.Attributes["name"].InnerText == portTypeKey);
 
-            return  messageContainers;
+            List<XmlNode> operations = portTypeNode.ChildNodes.Cast<XmlNode>().ToList();
+
+            foreach(XmlNode o in operations)
+            {
+                string operationName = o.Attributes["name"].InnerText;
+
+                WSDLOperation operation = info.FindOperationByName(operationName);
+
+                operation.Documentation = o.ChildNodes.Cast<XmlNode>()
+                                          .First(e => e.Name == "wsdl:documentation")
+                                          .InnerText;
+
+                operation.Input  =        o.ChildNodes.Cast<XmlNode>()
+                                          .First(e => e.Name == "wsdl:input")
+                                          .Attributes["message"].InnerText;
+
+                operation.Output  = o.ChildNodes.Cast<XmlNode>()
+                                          .First(e => e.Name == "wsdl:output")
+                                          .Attributes["message"].InnerText;
+            }
+
+            return info;
+        }
+
+        public WSDLInformation GetMessages(WSDLInformation info)
+        {
+            List<XmlNode> soapMessages = _messageNodes.Cast<XmlNode>()
+                                           .Where(n => n.Attributes["name"].InnerText.Contains("Soap"))
+                                           .ToList();
+
+            foreach(XmlNode message in soapMessages)
+            {
+                string name = message.Attributes["name"].InnerText;
+
+                string type = info.GetParameterTypeByName(name);
+
+                WSDLOperation operation = info.FindOperationByParameter(name);
+
+                // NOTE(c-jm): We are making an assumption that messages only have ONE part! This is the case on webServiceX
+
+                XmlNode partNode = message.FirstChild;
+
+                if (type == "IN")
+                {
+                    operation.InputMessage = partNode.Attributes["element"].InnerText;
+                }
+                else if (type == "OUT")
+                {
+                    operation.OutputMessage = partNode.Attributes["element"].InnerText;
+                }
+            }
+
+            return info; 
         }
     }
 }
+

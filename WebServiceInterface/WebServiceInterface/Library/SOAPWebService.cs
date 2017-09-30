@@ -177,7 +177,7 @@ namespace WebServiceInterface
 
             if (parts.Last().EndsWith(".asmx"))
             {
-                normalizedUrl += "?WSDL";
+                normalizedUrl += DOT_NET_WSDL_SUFFIX;
             }
 
             return normalizedUrl;

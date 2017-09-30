@@ -6,15 +6,8 @@ using System.Threading.Tasks;
 
 namespace WebServiceInterface.Library.WSDL
 {
-    class Message
+    class WSDLService
     {
-        public string name;
-        public List<Part> parts;
-
-        public Message()
-        {
-            
-        }
+        public string Name { get; set; }
     }
-
 }

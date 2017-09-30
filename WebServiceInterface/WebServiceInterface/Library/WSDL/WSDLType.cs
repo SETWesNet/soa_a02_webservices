@@ -6,11 +6,15 @@ using System.Threading.Tasks;
 
 namespace WebServiceInterface.Library.WSDL
 {
-    class Part
+    class WSDLType
     {
         public string Name { get; set; }
-        public string Element { get; set; }
+        public string Type { get; set; }
 
-        public List<TypeContainer> CorrespondingTypes;
+        public WSDLType(string name, string type)
+        {
+            this.Name = name;
+            this.Type = type;
+        }
     }
 }

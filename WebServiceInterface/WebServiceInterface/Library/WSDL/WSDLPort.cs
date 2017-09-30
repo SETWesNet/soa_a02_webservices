@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace WebServiceInterface.Library.WSDL
 {
-    class Type
+    class WSDLPort
     {
-        public string Signature { get; set; }
-        public string Name { get; set; }   
+        public string Name { get; set; }
+        public string Binding { get; set; }
+        public string Location { get; set; }
     }
-}
+ }

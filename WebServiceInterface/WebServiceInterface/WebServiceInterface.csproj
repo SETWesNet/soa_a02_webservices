@@ -50,15 +50,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extension Methods\ControlCollectionExtensions.cs" />
     <Compile Include="Library\LibraryManager.cs" />
-    <Compile Include="Library\ServiceInfo.cs" />
     <Compile Include="Library\Parameter.cs" />
     <Compile Include="Library\Method.cs" />
+    <Compile Include="Library\SOAPArgument.cs" />
     <Compile Include="Library\SOAPWebService.cs" />
-    <Compile Include="Library\WSDL\MessageContainer.cs" />
-    <Compile Include="Library\WSDL\Message.cs" />
-    <Compile Include="Library\WSDL\Part.cs" />
+    <Compile Include="Library\WebService.cs" />
     <Compile Include="Library\WSDLParser.cs" />
+    <Compile Include="Library\WSDL\WSDLInformation.cs" />
+    <Compile Include="Library\WSDL\WSDLOperation.cs" />
+    <Compile Include="Library\WSDL\WSDLPort.cs" />
+    <Compile Include="Library\WSDL\WSDLService.cs" />
+    <Compile Include="Library\WSDL\WSDLType.cs" />
+    <Compile Include="Library\WSDL\WSDLTypeInformation.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -67,6 +73,12 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextBoard.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="TextBoard.Designer.cs">
+      <DependentUpon>TextBoard.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -79,6 +91,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="TextBoard.resx">
+      <DependentUpon>TextBoard.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

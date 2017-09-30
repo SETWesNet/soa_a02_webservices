@@ -26,8 +26,8 @@ namespace WebServiceInterface
         private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
             Logger.Log(e.Exception);
-            MessageBox.Show(@"An unknown error has occurred and the application
-               needs to shut down. Please see logs for more information.", "Fatal Error",
+            MessageBox.Show("An unknown error has occurred and the application " +
+               "needs to shut down. Please see logs for more information.", "Fatal Error",
                MessageBoxButtons.OK, MessageBoxIcon.Error);
             Application.Exit();
         }

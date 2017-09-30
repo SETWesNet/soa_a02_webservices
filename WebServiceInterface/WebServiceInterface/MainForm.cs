@@ -200,13 +200,6 @@ namespace WebServiceInterface
             {
                 if (!string.IsNullOrEmpty(soapResponse))
                 {
-                    /* If the response doesn't have a tag, give it one */
-                    if (!Regex.IsMatch(soapResponse, "<\\/?[A-Z a-z 0-9]+>"))
-                    {
-                        soapResponse = soapResponse.Insert(0, "<Response>");
-                        soapResponse = soapResponse.Insert(soapResponse.Length, "</Response>");
-                    }
-
                     /* Put the reponse into a table, if not already */
                     if (!soapResponse.Contains("<Table>"))
                     {

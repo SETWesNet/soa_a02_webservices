@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Net;
-using System.Web.Services.Protocols;
 using WebServiceInterface.Library;
-using System.IO;
-using System.Net.Http;
+using System.Text.RegularExpressions;
 
 namespace WebServiceInterface
 {
@@ -48,24 +46,31 @@ namespace WebServiceInterface
         }
 
         /// <summary>
-        /// Invokes a method on the active SOAP web serice, returning its response.
+        /// Invokes a method on the active SOAP web serice, returning all the data
+        /// contained within the "Result" tag of the SOAP response.
         /// </summary>
         /// <param name="methodName">The name of the method to call on the web service.</param>
         /// <param name="arguments">The arguments to hand into the web method.</param>
-        /// <returns>XML response from the soap web method.</returns>
+        /// <returns>Contents of the SOAP method response tag..</returns>
         public async Task<string> CallMethodAsync(Method method, params SOAPArgument[] arguments)
         {
+            /* Create a soap envelope containing the method to call and parameter arguments */
             string soapEnvelope = CreateSoapEnvelope(method.Name, arguments);
             XmlDocument responseXml = new XmlDocument();
 
+            /* Send envelope to web service and get response into XML object */
             using (StringContent content = new StringContent(soapEnvelope, Encoding.UTF8, "application/soap+xml"))
             {
                 using (HttpResponseMessage response = await _httpClient.PostAsync(_serviceURL, content))
                 {
-                   responseXml.LoadXml(await response.Content.ReadAsStringAsync());
+                    responseXml.LoadXml(await response.Content.ReadAsStringAsync());
                 }
             }
-            return responseXml.InnerText;
+
+            /* Get the inner contents of the soap result node */
+            string resultContents = ParseSoapResultContents(method, responseXml);
+
+            return resultContents;
         }
 
 
@@ -83,6 +88,36 @@ namespace WebServiceInterface
                               "</soap12:Envelope>";
 
             return envelopeString;
+        }
+
+        /// <summary>
+        /// Parses a soap response and returns the contents of the (methodname)Result
+        /// node. If the data within the node is just a value without tags, a Result tag
+        /// will be added around the value.
+        /// </summary>
+        /// <param name="method">The method call that invoked the SOAP response.</param>
+        /// <param name="soapResponse">The SOAP response that was returned based on a method call.</param>
+        /// <returns></returns>
+        /// <exception cref="XmlException">SOAP response XML not in expected format. Missing Result tag.</exception>
+        private string ParseSoapResultContents(Method method, XmlDocument soapResponse)
+        {
+            /* Get result node, containing the primary SOAP payload */
+            XmlNodeList responseNode = soapResponse.GetElementsByTagName(method.Name + "Result");
+
+            if (responseNode.Count != 1)
+            {
+                throw new XmlException("SOAP response XML not in expected format. Missing Result tag.");
+            }
+
+            string response = responseNode[0].InnerText;
+
+            /* If the response innertext doesn't have a tag, give it one */
+            if (!Regex.IsMatch(response, "<?\\/*.>"))
+            {
+                response = response.Insert(0, "<Result>");
+                response = response.Insert(response.Length, "</Result>");
+            }
+            return response;
         }
 
         #region WSDL

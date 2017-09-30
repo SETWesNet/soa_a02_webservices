@@ -25,13 +25,14 @@ namespace WebServiceInterface
 
                 if (!string.IsNullOrEmpty(additionalInfo))
                 {
-                    logText = "\nAdditonalInfo:\n" + additionalInfo;
+                    logText += "\nAdditonalInfo:\n" + additionalInfo;
                 }
 
                 using (StreamWriter w = File.AppendText("logs.log"))
                 {
-                    w.Write(logText);
-                    w.Write(new string('-', 40));
+                    w.WriteLine(DateTime.Now);
+                    w.WriteLine(logText);
+                    w.WriteLine(new string('-', 160));
                 }
             }
         }

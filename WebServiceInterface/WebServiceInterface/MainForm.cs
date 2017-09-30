@@ -10,7 +10,10 @@ using System.Windows.Forms.Extensions;
 using System.Data;
 using System.IO;
 using System.Resources;
+using System.Drawing;
 using System.Threading;
+using System.Xml;
+using System.Diagnostics;
 
 namespace WebServiceInterface
 {
@@ -18,8 +21,8 @@ namespace WebServiceInterface
     {
         private LibraryManager _configLibrary = new LibraryManager("config.json");
         private ResourceManager _resourceManager = new ResourceManager(typeof(MainForm));
-        private ToolTip _errorTooltip = new ToolTip();
 
+        private ToolTip _errorTooltip = new ToolTip();
 
         public MainForm()
         {
@@ -180,7 +183,7 @@ namespace WebServiceInterface
 
             /* Get the currently selected method and call the web service method using user arguments (if any) */
             Method selectedMethod = _configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
-            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx?"); //TODO (Kyle): Make this not hardcoded
+            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx"); //TODO (Kyle): Make this not hardcoded
             string soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
 
             return soapResponse;
@@ -197,6 +200,13 @@ namespace WebServiceInterface
             {
                 if (!string.IsNullOrEmpty(soapResponse))
                 {
+                    /* If the response doesn't have a tag, give it one */
+                    if (!Regex.IsMatch(soapResponse, "<\\/?[A-Z a-z 0-9]+>"))
+                    {
+                        soapResponse = soapResponse.Insert(0, "<Response>");
+                        soapResponse = soapResponse.Insert(soapResponse.Length, "</Response>");
+                    }
+
                     /* Put the reponse into a table, if not already */
                     if (!soapResponse.Contains("<Table>"))
                     {
@@ -204,19 +214,51 @@ namespace WebServiceInterface
                         soapResponse = soapResponse.Insert(soapResponse.Length, "</Table>");
                     }
 
-                    /* Display the response in the data grid view */
+                    /* Convert XML table into DataTable using dataset, bind to grid for display */
                     DataSet dataSet = new DataSet();
                     dataSet.ReadXml(new StringReader(soapResponse));
                     grdviewResponse.DataSource = dataSet.Tables[0];
                 }
             }
-            catch (IndexOutOfRangeException ex)
+            catch (Exception ex) when (ex is IndexOutOfRangeException || ex is XmlException)
             {
-                Logger.Log(ex, _resourceManager.GetString("Error_ResponseDisplay_Message"));
+                Logger.Log(ex, soapResponse);
                 MessageBox.Show(this, _resourceManager.GetString("Error_ResponseDisplay_Message"),
                 _resourceManager.GetString("Error_ResponseDisplay_Caption"),
-                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+        }
+
+        /// <summary>
+        /// Processes a SOAP transaction from start to finish by calling the web
+        /// service method and then displaying the resulting response. A loading
+        /// status is shown to alert the user of the progress and the send button
+        /// is disabled until finished.
+        /// </summary>
+        /// <returns>Task</returns>
+        private async Task ProcessSOAPTransaction()
+        {
+            /* Clear data grid of current data and disable send button */
+            grdviewResponse.DataSource = null;
+            btnSend.Enabled = false;
+
+            /* Show TextBoard with current status and call web method */
+            txtbrdStatus.Show();
+            txtbrdStatus.Text = "Retrieving Response, Please Wait...";
+            grdviewResponse.UseWaitCursor = true;
+            txtbrdStatus.UseWaitCursor = true;
+            string response = await CallWebServiceMethod();
+
+            /* Update status and begin loading results into grid */
+            txtbrdStatus.Text = "Loading Results, Please Wait...";
+            txtbrdStatus.Update();
+            DisplaySoapResponse(response);
+
+            /* Re-enable send button and hide the status box */
+            btnSend.Enabled = true;
+            grdviewResponse.UseWaitCursor = false;
+            txtbrdStatus.UseWaitCursor = false;
+            txtbrdStatus.Hide();
         }
 
         #region Events Handlers
@@ -231,9 +273,7 @@ namespace WebServiceInterface
 
         private async void btnSend_Click(object sender, EventArgs e)
         {
-            string response = await CallWebServiceMethod();
-            Thread t = new Thread(new ThreadStart(() => DisplaySoapResponse(response)));
-            t.Start();
+            await ProcessSOAPTransaction();
         }
 
         private void drpdwnWebServices_SelectionChangeCommitted(object sender, EventArgs e)

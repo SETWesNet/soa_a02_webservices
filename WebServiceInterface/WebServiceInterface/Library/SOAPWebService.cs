@@ -8,6 +8,7 @@ using System.Net;
 using System.Web.Services.Protocols;
 using WebServiceInterface.Library;
 using System.IO;
+using System.Net.Http;
 
 namespace WebServiceInterface
 {
@@ -15,6 +16,8 @@ namespace WebServiceInterface
     {
         private string _serviceURL;
         const string DOT_NET_WSDL_SUFFIX = "?WSDL";
+        private static HttpClient _httpClient = new HttpClient();
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SOAPWebService"/> class, which
@@ -52,61 +55,34 @@ namespace WebServiceInterface
         /// <returns>XML response from the soap web method.</returns>
         public async Task<string> CallMethodAsync(Method method, params SOAPArgument[] arguments)
         {
-            /* Create a webrequest to the desired SOAP service method, and create a soap envelope (with parameters) */
-            HttpWebRequest webRequest = CreateSoapWebRequest(_serviceURL);
-            XmlDocument soapEnvelope = CreateSoapEnvelope(method.Name, arguments);
+            string soapEnvelope = CreateSoapEnvelope(method.Name, arguments);
+            XmlDocument responseXml = new XmlDocument();
 
-            /* Save the soap envelope to the HTTP request */
-            using (Stream stream = webRequest.GetRequestStream())
+            using (StringContent content = new StringContent(soapEnvelope, Encoding.UTF8, "application/soap+xml"))
             {
-                soapEnvelope.Save(stream);
-            }
-
-            XmlDocument soapResponse = new XmlDocument();
-
-            /* Send the request and receive the response back from the web service */
-            using (WebResponse webResponse = await webRequest.GetResponseAsync())
-            {
-                using (StreamReader rd = new StreamReader(webResponse.GetResponseStream()))
+                using (HttpResponseMessage response = await _httpClient.PostAsync(_serviceURL, content))
                 {
-                    soapResponse.LoadXml(await rd.ReadToEndAsync());
+                   responseXml.LoadXml(await response.Content.ReadAsStringAsync());
                 }
             }
-
-            return soapResponse.InnerText;
+            return responseXml.InnerText;
         }
 
-        /// <summary>
-        /// Creates an HTTPWebRequest object with the HTTP header information configured
-        /// to carry a SOAP payload using POST to the desried web service URL.
-        /// </summary>
-        /// <param name="serviceURL">The URL to deliver the POST request to.</param>
-        /// <returns>HTTPWebRequest object configured for SOAP.</returns>
-        private static HttpWebRequest CreateSoapWebRequest(string serviceURL)
-        {
-            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(serviceURL);
-            webRequest.ContentType = "application/soap+xml";
-            webRequest.Method = "POST";
-            return webRequest;
-        }
 
-        private static XmlDocument CreateSoapEnvelope(string methodName, SOAPArgument[] arguments)
+        private static string CreateSoapEnvelope(string methodName, SOAPArgument[] arguments)
         {
-            XmlDocument soapEnvelope = new XmlDocument();
             string envelopeString = "<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
                                     "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
                                     "xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">" +
                                     "<soap12:Body>";
 
             envelopeString += "<GetAirportInformationByCountry xmlns=\"http://www.webserviceX.NET\">" +
-                              "<country>United States</country>" +
+                              "<country>Canada</country>" +
                               "</GetAirportInformationByCountry>" +
                               "</soap12:Body>" +
                               "</soap12:Envelope>";
 
-            soapEnvelope.LoadXml(envelopeString);
-
-            return soapEnvelope;
+            return envelopeString;
         }
 
         #region WSDL

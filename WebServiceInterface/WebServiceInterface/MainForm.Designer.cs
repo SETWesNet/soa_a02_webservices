@@ -31,6 +31,7 @@
             this.drpdwnWebServices = new System.Windows.Forms.ComboBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.grpboxMain = new System.Windows.Forms.GroupBox();
+            this.grdviewResponse = new System.Windows.Forms.DataGridView();
             this.btnSend = new System.Windows.Forms.Button();
             this.lblReturnValue = new System.Windows.Forms.Label();
             this.grpboxParamters = new System.Windows.Forms.GroupBox();
@@ -38,10 +39,10 @@
             this.lblMethods = new System.Windows.Forms.Label();
             this.drpdwnMethods = new System.Windows.Forms.ComboBox();
             this.lblWebService = new System.Windows.Forms.Label();
-            this.grdviewResponse = new System.Windows.Forms.DataGridView();
+            this.txtbrdStatus = new WebServiceInterface.TextBoard();
             this.grpboxMain.SuspendLayout();
-            this.grpboxParamters.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.grdviewResponse)).BeginInit();
+            this.grpboxParamters.SuspendLayout();
             this.SuspendLayout();
             // 
             // drpdwnWebServices
@@ -59,6 +60,7 @@
             this.grpboxMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.grpboxMain.Controls.Add(this.txtbrdStatus);
             this.grpboxMain.Controls.Add(this.grdviewResponse);
             this.grpboxMain.Controls.Add(this.btnSend);
             this.grpboxMain.Controls.Add(this.lblReturnValue);
@@ -72,6 +74,22 @@
             this.grpboxMain.Size = new System.Drawing.Size(648, 732);
             this.grpboxMain.TabIndex = 1;
             this.grpboxMain.TabStop = false;
+            // 
+            // grdviewResponse
+            // 
+            this.grdviewResponse.AllowUserToAddRows = false;
+            this.grdviewResponse.AllowUserToDeleteRows = false;
+            this.grdviewResponse.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grdviewResponse.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.ColumnHeader;
+            this.grdviewResponse.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.grdviewResponse.Location = new System.Drawing.Point(10, 404);
+            this.grdviewResponse.Name = "grdviewResponse";
+            this.grdviewResponse.ReadOnly = true;
+            this.grdviewResponse.RowTemplate.Height = 28;
+            this.grdviewResponse.Size = new System.Drawing.Size(620, 245);
+            this.grdviewResponse.TabIndex = 9;
             // 
             // btnSend
             // 
@@ -150,21 +168,15 @@
             this.lblWebService.TabIndex = 1;
             this.lblWebService.Text = "Web Service";
             // 
-            // grdviewResponse
+            // txtbrdStatus
             // 
-            this.grdviewResponse.AllowUserToAddRows = false;
-            this.grdviewResponse.AllowUserToDeleteRows = false;
-            this.grdviewResponse.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.grdviewResponse.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.grdviewResponse.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
-            this.grdviewResponse.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.grdviewResponse.Location = new System.Drawing.Point(10, 404);
-            this.grdviewResponse.Name = "grdviewResponse";
-            this.grdviewResponse.RowTemplate.Height = 28;
-            this.grdviewResponse.Size = new System.Drawing.Size(620, 245);
-            this.grdviewResponse.TabIndex = 9;
+            this.txtbrdStatus.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.txtbrdStatus.Location = new System.Drawing.Point(165, 465);
+            this.txtbrdStatus.Name = "txtbrdStatus";
+            this.txtbrdStatus.Size = new System.Drawing.Size(310, 122);
+            this.txtbrdStatus.TabIndex = 10;
+            this.txtbrdStatus.Text = "Retrieving Response, Please Wait...";
+            this.txtbrdStatus.Visible = false;
             // 
             // MainForm
             // 
@@ -176,8 +188,8 @@
             this.Text = "Web Service Interface";
             this.grpboxMain.ResumeLayout(false);
             this.grpboxMain.PerformLayout();
-            this.grpboxParamters.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.grdviewResponse)).EndInit();
+            this.grpboxParamters.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -195,6 +207,7 @@
         private System.Windows.Forms.Label lblReturnValue;
         private System.Windows.Forms.Button btnSend;
         private System.Windows.Forms.DataGridView grdviewResponse;
+        private TextBoard txtbrdStatus;
     }
 }
 

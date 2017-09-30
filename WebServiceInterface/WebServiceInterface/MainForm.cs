@@ -9,14 +9,20 @@ using System.Media;
 using System.Windows.Forms.Extensions;
 using System.Data;
 using System.IO;
+using System.Resources;
+using System.Drawing;
+using System.Threading;
+using System.Xml;
+using System.Diagnostics;
 
 namespace WebServiceInterface
 {
     public partial class MainForm : Form
     {
-        private LibraryManager configLibrary = new LibraryManager("config.json");
-        private ToolTip _errorTooltip = new ToolTip();
+        private LibraryManager _configLibrary = new LibraryManager("config.json");
+        private ResourceManager _resourceManager = new ResourceManager(typeof(MainForm));
 
+        private ToolTip _errorTooltip = new ToolTip();
 
         public MainForm()
         {
@@ -25,11 +31,11 @@ namespace WebServiceInterface
             /* Initialize Drop Downs */
             drpdwnWebServices.DisplayMember = nameof(WebService.Name);
             drpdwnWebServices.ValueMember = nameof(WebService.Url);
-            drpdwnWebServices.DataSource = configLibrary.Services;
+            drpdwnWebServices.DataSource = _configLibrary.Services;
 
             drpdwnMethods.DisplayMember = nameof(Method.Name);
             drpdwnMethods.ValueMember = nameof(Method.Name);
-            WebService selectedService = configLibrary.GetService(SelectedWebServiceURL);
+            WebService selectedService = _configLibrary.GetService(SelectedWebServiceURL);
             drpdwnMethods.DataSource = selectedService.Methods;
         }
 
@@ -72,7 +78,7 @@ namespace WebServiceInterface
 
             /* Dispose all controls from flow layout and get current selected method */
             flwParameters.Controls.DisposeAll();
-            Method selectedMethod = configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+            Method selectedMethod = _configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
 
             /* Create input controls for parameters, assign textchanged event for validation for textbox */
             foreach (Parameter param in selectedMethod.Parameters)
@@ -112,7 +118,7 @@ namespace WebServiceInterface
         private SOAPArgument[] CollectMethodArguments()
         {
             List<SOAPArgument> arguments = new List<SOAPArgument>();
-            Method selectedMethod = configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+            Method selectedMethod = _configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
 
             /* Create argument objects by getting the value of the associated controls in the flow layout  */
             foreach (Control control in flwParameters.Controls)
@@ -145,7 +151,7 @@ namespace WebServiceInterface
         private void ValidateParameterTextBox(TextBox parameterTextBox)
         {
             /* Use the name of the textbox to get the corresponding parameter it is taking input for */
-            Parameter parameter = configLibrary.GetParameter(SelectedWebServiceURL,
+            Parameter parameter = _configLibrary.GetParameter(SelectedWebServiceURL,
                 SelectedMethodName, parameterTextBox.Name);
 
             /* If there is a regex pattern for the paramater and text to validate, do so */
@@ -176,8 +182,8 @@ namespace WebServiceInterface
             SOAPArgument[] arguments = CollectMethodArguments();
 
             /* Get the currently selected method and call the web service method using user arguments (if any) */
-            Method selectedMethod = configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
-            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx?"); //TODO (Kyle): Make this not hardcoded
+            Method selectedMethod = _configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx"); //TODO (Kyle): Make this not hardcoded
             string soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
 
             return soapResponse;
@@ -190,20 +196,69 @@ namespace WebServiceInterface
         /// <param name="soapResponse">A SOAP response string.</param>
         private void DisplaySoapResponse(string soapResponse)
         {
-            if (!string.IsNullOrEmpty(soapResponse))
+            try
             {
-                /* Put the reponse into a table, if not already */
-                if (!soapResponse.Contains("<Table>"))
+                if (!string.IsNullOrEmpty(soapResponse))
                 {
-                    soapResponse = soapResponse.Insert(0, "<Table>");
-                    soapResponse = soapResponse.Insert(soapResponse.Length, "</Table>");
-                }
+                    /* If the response doesn't have a tag, give it one */
+                    if (!Regex.IsMatch(soapResponse, "<\\/?[A-Z a-z 0-9]+>"))
+                    {
+                        soapResponse = soapResponse.Insert(0, "<Response>");
+                        soapResponse = soapResponse.Insert(soapResponse.Length, "</Response>");
+                    }
 
-                /* Display the response in the data grid view */
-                DataSet dataSet = new DataSet();
-                dataSet.ReadXml(new StringReader(soapResponse));
-                grdviewResponse.DataSource = dataSet.Tables[0];
+                    /* Put the reponse into a table, if not already */
+                    if (!soapResponse.Contains("<Table>"))
+                    {
+                        soapResponse = soapResponse.Insert(0, "<Table>");
+                        soapResponse = soapResponse.Insert(soapResponse.Length, "</Table>");
+                    }
+
+                    /* Convert XML table into DataTable using dataset, bind to grid for display */
+                    DataSet dataSet = new DataSet();
+                    dataSet.ReadXml(new StringReader(soapResponse));
+                    grdviewResponse.DataSource = dataSet.Tables[0];
+                }
             }
+            catch (Exception ex) when (ex is IndexOutOfRangeException || ex is XmlException)
+            {
+                Logger.Log(ex, soapResponse);
+                MessageBox.Show(this, _resourceManager.GetString("Error_ResponseDisplay_Message"),
+                _resourceManager.GetString("Error_ResponseDisplay_Caption"),
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Processes a SOAP transaction from start to finish by calling the web
+        /// service method and then displaying the resulting response. A loading
+        /// status is shown to alert the user of the progress and the send button
+        /// is disabled until finished.
+        /// </summary>
+        /// <returns>Task</returns>
+        private async Task ProcessSOAPTransaction()
+        {
+            /* Clear data grid of current data and disable send button */
+            grdviewResponse.DataSource = null;
+            btnSend.Enabled = false;
+
+            /* Show TextBoard with current status and call web method */
+            txtbrdStatus.Show();
+            txtbrdStatus.Text = "Retrieving Response, Please Wait...";
+            grdviewResponse.UseWaitCursor = true;
+            txtbrdStatus.UseWaitCursor = true;
+            string response = await CallWebServiceMethod();
+
+            /* Update status and begin loading results into grid */
+            txtbrdStatus.Text = "Loading Results, Please Wait...";
+            txtbrdStatus.Update();
+            DisplaySoapResponse(response);
+
+            /* Re-enable send button and hide the status box */
+            btnSend.Enabled = true;
+            grdviewResponse.UseWaitCursor = false;
+            txtbrdStatus.UseWaitCursor = false;
+            txtbrdStatus.Hide();
         }
 
         #region Events Handlers
@@ -218,13 +273,12 @@ namespace WebServiceInterface
 
         private async void btnSend_Click(object sender, EventArgs e)
         {
-            string response = await CallWebServiceMethod();
-            DisplaySoapResponse(response);
+            await ProcessSOAPTransaction();
         }
 
         private void drpdwnWebServices_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            WebService selectedService = configLibrary.GetService(SelectedWebServiceURL);
+            WebService selectedService = _configLibrary.GetService(SelectedWebServiceURL);
             drpdwnMethods.DataSource = selectedService.Methods;
         }
 

@@ -31,6 +31,7 @@
             this.drpdwnWebServices = new System.Windows.Forms.ComboBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.grpboxMain = new System.Windows.Forms.GroupBox();
+            this.txtbrdStatus = new WebServiceInterface.TextBoard();
             this.grdviewResponse = new System.Windows.Forms.DataGridView();
             this.btnSend = new System.Windows.Forms.Button();
             this.lblReturnValue = new System.Windows.Forms.Label();
@@ -39,7 +40,6 @@
             this.lblMethods = new System.Windows.Forms.Label();
             this.drpdwnMethods = new System.Windows.Forms.ComboBox();
             this.lblWebService = new System.Windows.Forms.Label();
-            this.txtbrdStatus = new WebServiceInterface.TextBoard();
             this.grpboxMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.grdviewResponse)).BeginInit();
             this.grpboxParamters.SuspendLayout();
@@ -74,6 +74,16 @@
             this.grpboxMain.Size = new System.Drawing.Size(648, 732);
             this.grpboxMain.TabIndex = 1;
             this.grpboxMain.TabStop = false;
+            // 
+            // txtbrdStatus
+            // 
+            this.txtbrdStatus.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.txtbrdStatus.Location = new System.Drawing.Point(165, 465);
+            this.txtbrdStatus.Name = "txtbrdStatus";
+            this.txtbrdStatus.Size = new System.Drawing.Size(310, 122);
+            this.txtbrdStatus.TabIndex = 10;
+            this.txtbrdStatus.Text = "Retrieving Response, Please Wait...";
+            this.txtbrdStatus.Visible = false;
             // 
             // grdviewResponse
             // 
@@ -167,16 +177,6 @@
             this.lblWebService.Size = new System.Drawing.Size(98, 20);
             this.lblWebService.TabIndex = 1;
             this.lblWebService.Text = "Web Service";
-            // 
-            // txtbrdStatus
-            // 
-            this.txtbrdStatus.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.txtbrdStatus.Location = new System.Drawing.Point(165, 465);
-            this.txtbrdStatus.Name = "txtbrdStatus";
-            this.txtbrdStatus.Size = new System.Drawing.Size(310, 122);
-            this.txtbrdStatus.TabIndex = 10;
-            this.txtbrdStatus.Text = "Retrieving Response, Please Wait...";
-            this.txtbrdStatus.Visible = false;
             // 
             // MainForm
             // 

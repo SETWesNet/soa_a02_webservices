@@ -13,7 +13,10 @@ using System.Resources;
 using System.Drawing;
 using System.Threading;
 using System.Xml;
+using System.Net.Http;
+using System.Net;
 using System.Diagnostics;
+using System.Web.Services.Protocols;
 
 namespace WebServiceInterface
 {
@@ -176,6 +179,8 @@ namespace WebServiceInterface
         /// as XML.
         /// </summary>
         /// <returns>The SOAP response XML.</returns>
+        /// <exception cref="SoapException">Thrown when a server side SOAP fault occurs.</exception>
+        /// <exception cref="HttpRequestException">Thrown when an issue occurs communicating with the web service.</exception>
         private async Task<string> CallWebServiceMethod()
         {
             /* Get all the arguments entered by the user */
@@ -183,17 +188,17 @@ namespace WebServiceInterface
 
             /* Get the currently selected method and call the web service method using user arguments (if any) */
             Method selectedMethod = _configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
-            SOAPWebService webService = new SOAPWebService(@"http://www.webservicex.net/airport.asmx"); //TODO (Kyle): Make this not hardcoded
+            SOAPWebService webService = new SOAPWebService(SelectedWebServiceURL); //TODO (Kyle): Make this not hardcoded
             string soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
 
             return soapResponse;
         }
 
         /// <summary>
-        /// Displays a SOAP response XML string in the forms
-        /// DataGridView area.
+        /// Displays the contents of a SOAP responses
+        /// result node in the datagridview area.
         /// </summary>
-        /// <param name="soapResponse">A SOAP response string.</param>
+        /// <param name="soapResponse">The contents of a soap result node.</param>
         private void DisplaySoapResponse(string soapResponse)
         {
             try
@@ -231,27 +236,46 @@ namespace WebServiceInterface
         /// <returns>Task</returns>
         private async Task ProcessSOAPTransaction()
         {
-            /* Clear data grid of current data and disable send button */
-            grdviewResponse.DataSource = null;
-            btnSend.Enabled = false;
+            try
+            {
+                /* Clear data grid of current data and disable send button */
+                grdviewResponse.DataSource = null;
+                btnSend.Enabled = false;
 
-            /* Show TextBoard with current status and call web method */
-            txtbrdStatus.Show();
-            txtbrdStatus.Text = "Retrieving Response, Please Wait...";
-            grdviewResponse.UseWaitCursor = true;
-            txtbrdStatus.UseWaitCursor = true;
-            string response = await CallWebServiceMethod();
+                /* Show TextBoard with current status and call web method */
+                txtbrdStatus.Show();
+                txtbrdStatus.Text = "Retrieving Response, Please Wait...";
+                grdviewResponse.UseWaitCursor = true;
+                txtbrdStatus.UseWaitCursor = true;
+                string response = await CallWebServiceMethod();
 
-            /* Update status and begin loading results into grid */
-            txtbrdStatus.Text = "Loading Results, Please Wait...";
-            txtbrdStatus.Update();
-            DisplaySoapResponse(response);
-
-            /* Re-enable send button and hide the status box */
-            btnSend.Enabled = true;
-            grdviewResponse.UseWaitCursor = false;
-            txtbrdStatus.UseWaitCursor = false;
-            txtbrdStatus.Hide();
+                /* Update status and begin loading results into grid */
+                txtbrdStatus.Text = "Loading Results, Please Wait...";
+                txtbrdStatus.Update();
+                DisplaySoapResponse(response);
+            }
+            catch (SoapException ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show(this, _resourceManager.GetString("Error_SoapFault_Message"),
+                _resourceManager.GetString("Error_SoapFault_Caption"),
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (HttpRequestException ex)
+            {
+                Logger.Log(ex);
+                MessageBox.Show(this, _resourceManager.GetString("Error_HttpRequest_Message"),
+                _resourceManager.GetString("Error_HttpRequest_Caption"),
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            finally
+            {
+                /* Re-enable send button and hide the status box */
+                btnSend.Enabled = true;
+                grdviewResponse.UseWaitCursor = false;
+                txtbrdStatus.UseWaitCursor = false;
+                txtbrdStatus.Hide();
+            }
         }
 
         #region Events Handlers

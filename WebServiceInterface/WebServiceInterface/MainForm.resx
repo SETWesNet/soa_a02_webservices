@@ -129,4 +129,20 @@
     <value>An error occurred displaying the web service response. This may be caused by the resonse being in an unexpected or invalid format.</value>
     <comment>Used for when an error occurs trying to display the SOAP response.</comment>
   </data>
+  <data name="Error_HttpRequest_Caption" xml:space="preserve">
+    <value>Communication Error</value>
+    <comment>Used when a SOAP method request isn't fufilled by the server.</comment>
+  </data>
+  <data name="Error_HttpRequest_Message" xml:space="preserve">
+    <value>An error has occurred communicating with the web service. The site could be down or the URL invalid.</value>
+    <comment>Used when a SOAP method request isn't fufilled by the server.</comment>
+  </data>
+  <data name="Error_SoapFault_Caption" xml:space="preserve">
+    <value>Web Service Error</value>
+    <comment>Used when a soap fault occurs.</comment>
+  </data>
+  <data name="Error_SoapFault_Message" xml:space="preserve">
+    <value>The web service reported an error. Please ensure that the method parameters are valid, and please try again.</value>
+    <comment>Used when a soap fault occurs.</comment>
+  </data>
 </root>

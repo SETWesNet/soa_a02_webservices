@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using WebServiceInterface.Library;
 using System.Text.RegularExpressions;
+using System.Web.Services.Protocols;
 
 namespace WebServiceInterface
 {
@@ -52,29 +53,68 @@ namespace WebServiceInterface
         /// <param name="methodName">The name of the method to call on the web service.</param>
         /// <param name="arguments">The arguments to hand into the web method.</param>
         /// <returns>Contents of the SOAP method response tag..</returns>
+        /// <exception cref="SoapException">Thrown when a server side SOAP fault occurs.</exception>
+        /// <exception cref="XmlException">Thrown if SOAP response is not in expected format (missing result tag).</exception>
+        /// <exception cref="HttpRequestException">Thrown when an issue occurs communicating with the web service or the server can't be resolved.</exception>
         public async Task<string> CallMethodAsync(Method method, params SOAPArgument[] arguments)
         {
             /* Create a soap envelope containing the method to call and parameter arguments */
-            string soapEnvelope = CreateSoapEnvelope(method.Name, arguments);
-            XmlDocument responseXml = new XmlDocument();
+            string soapEnvelope = CreateSoapEnvelope(method, arguments);
+            string resultContents = "";
 
-            /* Send envelope to web service and get response into XML object */
+            /* Send envelope to web service and process the response, getting back the contents of the result tag*/
             using (StringContent content = new StringContent(soapEnvelope, Encoding.UTF8, "application/soap+xml"))
             {
                 using (HttpResponseMessage response = await _httpClient.PostAsync(_serviceURL, content))
                 {
-                    responseXml.LoadXml(await response.Content.ReadAsStringAsync());
+                    resultContents = await ProcessSoapResponse(response, method);
+                }
+            }
+            return resultContents;
+        }
+
+        /// <summary>
+        /// Processes a SOAP response by checking to see if a valid result
+        /// was returned. If a valid result was received, then the contents
+        /// of the result tag will be returned. If a soap fault occurrs, a SOAP
+        /// exception will be thrown.
+        /// </summary>
+        /// <param name="response">Response object from a SOAP request.</param>
+        /// <param name="method">The method responsible for the response.</param>
+        /// <returns>Contents of the Result tag of the SOAP response.</returns>
+        /// <exception cref="SoapException">Thrown when a server side SOAP fault occurs.</exception>
+        /// <exception cref="HttpRequestException">Thrown when an issue occurs communicating with the web service.</exception>
+        /// <exception cref="XmlException">Thrown if SOAP response is not in expected format (missing result tag).</exception>
+        private async Task<string> ProcessSoapResponse(HttpResponseMessage response, Method method)
+        {
+            XmlDocument responseXml = new XmlDocument();
+       
+            /* Throw exception if an error occurred communicating with the web service */
+            if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.InternalServerError)
+            {
+                throw new HttpRequestException("An issue occurred communicating with the web service. Error: "
+                    + response.StatusCode.ToString());
+            }
+
+            /* If response successful, get the SOAP response, otherwise, throw SOAP exception */
+            if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.InternalServerError)
+            {
+                responseXml.LoadXml(await response.Content.ReadAsStringAsync());
+
+                if (response.StatusCode == HttpStatusCode.InternalServerError)
+                {
+                    throw new SoapException(responseXml.InnerText, XmlQualifiedName.Empty);
                 }
             }
 
-            /* Get the inner contents of the soap result node */
+            /* Parse out the contents of the result tag in the SOAP response */
             string resultContents = ParseSoapResultContents(method, responseXml);
 
             return resultContents;
         }
 
 
-        private static string CreateSoapEnvelope(string methodName, SOAPArgument[] arguments)
+        private static string CreateSoapEnvelope(Method method, SOAPArgument[] arguments)
         {
             string envelopeString = "<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
                                     "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
@@ -102,14 +142,15 @@ namespace WebServiceInterface
         private string ParseSoapResultContents(Method method, XmlDocument soapResponse)
         {
             /* Get result node, containing the primary SOAP payload */
-            XmlNodeList responseNode = soapResponse.GetElementsByTagName(method.Name + "Result");
+            XmlNodeList resultNode = soapResponse.GetElementsByTagName(method.Name + "Result");
 
-            if (responseNode.Count != 1)
+            if (resultNode.Count != 1)
             {
-                throw new XmlException("SOAP response XML not in expected format. Missing Result tag.");
+                throw new XmlException("SOAP response XML not in expected format. Missing Result tag named: "
+                    + method.Name + "Result");
             }
 
-            string response = responseNode[0].InnerText;
+            string response = resultNode[0].InnerText;
 
             /* If the response innertext doesn't have a tag, give it one */
             if (!Regex.IsMatch(response, "<?\\/*.>"))

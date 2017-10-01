@@ -19,76 +19,14 @@ namespace WebServiceInterface.Library.WSDL
     /// </summary>
     class WSDLOperation
     {
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        /// <value>
-        /// The name.
-        /// </value>
         public string Name { get; set; }
-
-        /// <summary>
-        /// Gets or sets the SOAP action.
-        /// </summary>
-        /// <value>
-        /// The SOAP action.
-        /// </value>
         public string SoapAction { get; set; }
-
-        /// <summary>
-        /// Gets or sets the input.
-        /// </summary>
-        /// <value>
-        /// The input.
-        /// </value>
         public string Input { get; set; }
-
-        /// <summary>
-        /// Gets or sets the input message.
-        /// </summary>
-        /// <value>
-        /// The input message.
-        /// </value>
         public string InputMessage { get; set; }
-
-        /// <summary>
-        /// Gets or sets the input type information.
-        /// </summary>
-        /// <value>
-        /// The input type information.
-        /// </value>
         public WSDLTypeInformation InputTypeInformation { get; set; }
-
-        /// <summary>
-        /// Gets or sets the output.
-        /// </summary>
-        /// <value>
-        /// The output.
-        /// </value>
         public string Output { get; set; }
-
-        /// <summary>
-        /// Gets or sets the output message.
-        /// </summary>
-        /// <value>
-        /// The output message.
-        /// </value>
         public string OutputMessage { get; set; }
-
-        /// <summary>
-        /// Gets or sets the output type information.
-        /// </summary>
-        /// <value>
-        /// The output type information.
-        /// </value>
         public WSDLTypeInformation OutputTypeInformation { get; set; }
-
-        /// <summary>
-        /// Gets or sets the documentation.
-        /// </summary>
-        /// <value>
-        /// The documentation.
-        /// </value>
         public string Documentation { get; set; }
 
         /// <summary>

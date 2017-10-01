@@ -21,46 +21,11 @@ namespace WebServiceInterface.Library.WSDL
     /// </summary>
     class WSDLInformation
     {
-        /// <summary>
-        /// Gets or sets the namespace.
-        /// </summary>
-        /// <value>
-        /// The namespace.
-        /// </value>
         public string Namespace { get; set; }
-
-        /// <summary>
-        /// Gets or sets the name of the base.
-        /// </summary>
-        /// <value>
-        /// The name of the base.
-        /// </value>
         public string BaseName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the service.
-        /// </summary>
-        /// <value>
-        /// The service.
-        /// </value>
         public WSDLService Service { get; set; }
-
-        /// <summary>
-        /// Gets or sets the port.
-        /// </summary>
-        /// <value>
-        /// The port.
-        /// </value>
         public WSDLPort Port { get; set; }
-
-        /// <summary>
-        /// Gets or sets the operations.
-        /// </summary>
-        /// <value>
-        /// The operations.
-        /// </value>
         public List<WSDLOperation> Operations { get; set; }
-
 
         public WSDLInformation()
         {
@@ -70,7 +35,7 @@ namespace WebServiceInterface.Library.WSDL
         }
 
         /// <summary>
-        /// Finds an operation by name
+        /// Finds a WSDLInformation's operation by name
         /// </summary>
         /// <param name="name"> Operation </param>
         /// <returns></returns>
@@ -80,7 +45,7 @@ namespace WebServiceInterface.Library.WSDL
         }
 
         /// <summary>
-        /// Finds the operation by message.
+        /// Finds a WSDLInformation's operation by message.
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns></returns>

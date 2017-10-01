@@ -18,28 +18,8 @@ namespace WebServiceInterface.Library.WSDL
     /// </summary>
     class WSDLPort
     {
-        /// <summary>
-        /// Gets or sets the name.
-        /// </summary>
-        /// <value>
-        /// The name.
-        /// </value>
         public string Name { get; set; }
-
-        /// <summary>
-        /// Gets or sets the binding.
-        /// </summary>
-        /// <value>
-        /// The binding.
-        /// </value>
         public string Binding { get; set; }
-
-        /// <summary>
-        /// Gets or sets the location.
-        /// </summary>
-        /// <value>
-        /// The location.
-        /// </value>
         public string Location { get; set; }
     }
  }

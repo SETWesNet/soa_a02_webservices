@@ -18,29 +18,11 @@ namespace WebServiceInterface.Library
     /// </summary>
     public static class WSDLHelpers
     {
-        /// <summary>
-        /// The SOAP suffix
-        /// </summary>
         public const string SOAP_SUFFIX = "Soap";
-
-        /// <summary>
-        /// The SOAP 12 suffix
-        /// </summary>
         public const string SOAP_12_SUFFIX = "Soap12";
-
-        /// <summary>
-        /// The TNS namespace
-        /// </summary>
         public const string TNS_NAMESPACE = "tns:";
 
-        /// <summary>
-        /// The in parameter
-        /// </summary>
         public const string IN_PARAMETER = "IN";
-
-        /// <summary>
-        /// The out parameter
-        /// </summary>
         public const string OUT_PARAMETER = "OUT";
 
         /// <summary>

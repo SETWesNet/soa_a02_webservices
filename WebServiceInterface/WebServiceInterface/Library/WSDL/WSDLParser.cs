@@ -77,15 +77,16 @@ namespace WebServiceInterface
         {
             WSDLPort port = new WSDLPort();
 
+            // Grab the wsdl:service to be able to get the name of the service.
             XmlNode first = _portNodes.Cast<XmlNode>().First().ParentNode;
-
             info.Service.Name = first.GetTextAttribute("name", "wsdl:service");
             info.BaseName = info.Service.Name;
 
+            // Generate the portkey to be able to get the direct port that we need. We are focusing on soap12
             string portKey = info.Service.Name += WSDLHelpers.SOAP_12_SUFFIX;
-
             XmlNode portNode = _portNodes.Cast<XmlNode>().First(p => p.GetTextAttribute("name", "wsdl:portNode") == portKey);
 
+            // Build the port from the portNode XMLNode.
             info.Port.Name =    WSDLHelpers.TrimNamespace(portNode.GetTextAttribute("name", "wsdl:portNode"));
             info.Port.Binding = WSDLHelpers.TrimNamespace(portNode.GetTextAttribute("binding", "wsdl:portNode"));
             info.Port.Location = portNode.FirstChild.GetTextAttribute("location", "soap:address");
@@ -101,12 +102,11 @@ namespace WebServiceInterface
         /// <returns>The filed out WSDLinformation</returns>
         public WSDLInformation GetOperations(WSDLInformation info)
         {
-            // Grab the binding and find the bindng that we want 
+            // Grab the proper binding 
             string binding = info.Port.Binding;
             XmlNode bindingNode = _bindingNodes.Cast<XmlNode>().First(e => e.GetTextAttribute("name", "wsdl:binding") == binding);
 
             // Go through each operation and create an object out of the name and the soapAction 
-
             info.Operations = bindingNode.ChildNodes.Cast<XmlNode>()
                                .Where(e => e.Name == "wsdl:operation")
                                .Select(e => new WSDLOperation(e.GetTextAttribute("name", "wsdl:operation"), e.FirstChild.GetTextAttribute("soapAction", "wsdl:part")))
@@ -122,19 +122,21 @@ namespace WebServiceInterface
         /// <returns></returns>
         public WSDLInformation GetPortTypes(WSDLInformation info)
         {
+            // Grab the proper portType
             string portTypeKey = info.BaseName += WSDLHelpers.SOAP_SUFFIX;
-
             XmlNode portTypeNode = _portTypeNodes.Cast<XmlNode>()
                                        .First(portType => portType.GetTextAttribute("name", "wsdl:portType") == portTypeKey);
 
+            // Grab all operations
             List<XmlNode> operations = portTypeNode.ChildNodes.Cast<XmlNode>().ToList();
 
             foreach(XmlNode o in operations)
             {
+                // Get the operation that we want. 
                 string operationName = o.GetTextAttribute("name", "wsdl:operation");
-
-                // Find the operation for this tag.
                 WSDLOperation operation = info.FindOperationByName(operationName);
+
+                // Fill out all of the info that we need. Input, Output, Documentation
 
                 // Grab the documentation tag, it is optiona.
                 XmlNode documentationNode = o.ChildNodes.Cast<XmlNode>().FirstOrDefault(e => e.Name == "wsdl:documentation");
@@ -164,6 +166,7 @@ namespace WebServiceInterface
         /// <returns></returns>
         public WSDLInformation GetMessages(WSDLInformation info)
         {
+            // Grab all the messages that are related to Soap 
             List<XmlNode> soapMessages = _messageNodes.Cast<XmlNode>()
                                            .Where(n => n.GetTextAttribute("name", "wsdl:message").Contains("Soap"))
                                            .ToList();
@@ -184,11 +187,11 @@ namespace WebServiceInterface
                 XmlNode partNode = message.FirstChild;
 
                 // Determine if its an input or output message and store accordingly.
-                if (type == "IN")
+                if (type == WSDLHelpers.IN_PARAMETER)
                 {
                     operation.InputMessage = partNode.GetTextAttribute("element", "wsdl:part");
                 }
-                else if (type == "OUT")
+                else if (type == WSDLHelpers.OUT_PARAMETER)
                 {
                     operation.OutputMessage = partNode.GetTextAttribute("element", "wsdl:part");
                 }
@@ -262,14 +265,15 @@ namespace WebServiceInterface
         {
             WSDLInformation wsdlInformation = new WSDLInformation();
 
+            // Generate the WSDLInformation from the parser.
             wsdlInformation = GetNamespace(wsdlInformation);
             wsdlInformation = GetPort(wsdlInformation);
             wsdlInformation = GetOperations(wsdlInformation);
             wsdlInformation = GetPortTypes(wsdlInformation);
             wsdlInformation = GetMessages(wsdlInformation);
 
+            // Build and apply the type information.
             List<WSDLTypeInformation> typeInfo = BuildTypeInformation();
-
             wsdlInformation.ApplyTypeInformation(typeInfo);
 
             return wsdlInformation;

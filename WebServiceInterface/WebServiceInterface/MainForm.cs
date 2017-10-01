@@ -13,6 +13,7 @@ using System.Resources;
 using System.Xml;
 using System.Net.Http;
 using System.Web.Services.Protocols;
+using System.Drawing;
 
 namespace WebServiceInterface
 {
@@ -109,6 +110,7 @@ namespace WebServiceInterface
                 else
                 {
                     Label textBoxLabel = new Label();
+                    textBoxLabel.Size = new Size(200, textBoxLabel.Size.Height);
                     textBoxLabel.Text = string.Format("{0} ({1})", param.Name, param.Type);
                     flwParameters.Controls.Add(textBoxLabel);
 

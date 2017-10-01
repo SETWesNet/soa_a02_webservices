@@ -92,8 +92,8 @@ namespace WebServiceInterface
             /* Throw exception if an error occurred communicating with the web service */
             if (!response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.InternalServerError)
             {
-                throw new HttpRequestException("An issue occurred communicating with the web service. Error: "
-                    + response.StatusCode.ToString());
+                throw new HttpRequestException("An issue occurred communicating with the web service. Error: " +
+                     response.StatusCode.ToString());
             }
 
             /* If response successful, get the SOAP response, otherwise, throw SOAP exception */
@@ -184,34 +184,19 @@ namespace WebServiceInterface
         }
 
         /// <summary>
-        /// Create a WebRequest which represents a get request to get a WSDL
-        /// </summary>
-        /// <param name="serviceUrl"> The service that we are trying to recieve the WSDL for. </param>
-        /// <returns></returns>
-        private static HttpWebRequest CreateWSDLWebRequest(string serviceUrl)
-        {
-            string normalizedUrl = NormalizeWSDLUrl(serviceUrl);
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(normalizedUrl);
-            request.Method = "GET";
-
-            return request;
-        }
-
-        /// <summary>
         /// Gets the WSDL document for the currently active web service.
         /// </summary>
         /// <returns>The WSDL as an XmlDocument.</returns>
         public async Task<XmlDocument> GetWSDLAsync()
         {
-            HttpWebRequest request = CreateWSDLWebRequest(_serviceURL);
-            WebResponse response = await request.GetResponseAsync();
+            /* Normalize URL based on the web service extension */
+            string normalizedURL = NormalizeWSDLUrl(_serviceURL);
             XmlDocument wsdl = new XmlDocument();
 
-            using (StreamReader sr = new StreamReader(response.GetResponseStream()))
+            /* Request wsdl and load information into XmlDocument object  */
+            using (HttpResponseMessage response = await _httpClient.GetAsync(normalizedURL))
             {
-                string wsdlString = await sr.ReadToEndAsync();
-                wsdl.LoadXml(wsdlString);
+                wsdl.LoadXml(await response.Content.ReadAsStringAsync());
             }
 
             return wsdl;

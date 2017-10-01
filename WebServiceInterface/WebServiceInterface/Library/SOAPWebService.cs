@@ -165,7 +165,9 @@ namespace WebServiceInterface
                     + method.Name + "Result");
             }
 
-            string response = resultNode[0].InnerText;
+            string response = resultNode[0].InnerXml;
+            response = response.Replace("&gt;", ">");
+            response = response.Replace("&lt;", "<");
 
             /* If the response innertext doesn't have a tag, give it one */
             if (!Regex.IsMatch(response, "<?\\/*.>"))

@@ -32,6 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Accessibility" />
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -50,10 +51,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\WSDLNodeNotFoundException.cs" />
     <Compile Include="Extension Methods\ControlCollectionExtensions.cs" />
+    <Compile Include="Extension Methods\XmlNodeExtensions.cs" />
     <Compile Include="Library\LibraryManager.cs" />
     <Compile Include="Library\Parameter.cs" />
     <Compile Include="Library\Method.cs" />
+    <Compile Include="Library\ParameterManager.cs" />
     <Compile Include="Library\SOAPArgument.cs" />
     <Compile Include="Library\SOAPWebService.cs" />
     <Compile Include="Library\WebService.cs" />

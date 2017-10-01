@@ -20,6 +20,7 @@ namespace WebServiceInterface
     public partial class MainForm : Form
     {
         private LibraryManager _libraryManager = new LibraryManager("config.json");
+        private ParameterManager _parameterManager = new ParameterManager(null);
 
         private ResourceManager _resourceManager = new ResourceManager(typeof(MainForm));
         private ToolTip _errorTooltip = new ToolTip();
@@ -55,8 +56,7 @@ namespace WebServiceInterface
         {
             /* Show loading status */
             txtbrdStatus.Text = _resourceManager.GetString("Load_ServiceInformation_Message");
-            UseWaitCursor = true;
-            txtbrdStatus.Show();
+            DisplayLoadStatus(true);
 
             /* Load WSDL information for each service in library */
             await _libraryManager.LoadWSDLsAsync();
@@ -72,16 +72,14 @@ namespace WebServiceInterface
             drpdwnMethods.DataSource = selectedService.Methods;
 
             /* Hide loading status and enable send button */
-            UseWaitCursor = false;
+            DisplayLoadStatus(false);
             btnSend.Enabled = true;
-            txtbrdStatus.Hide();
         }
 
         /// <summary>
         /// Deletes old parameter controls that are located in the flow layout and
         /// places new controls in their place, based on the parameters required for
-        /// the currently selected web service method. The controls Name property will
-        /// be set to the name of the parameter they take input for.
+        /// the currently selected web service method.
         /// </summary>
         private void CreateParameterControls()
         {
@@ -92,89 +90,39 @@ namespace WebServiceInterface
                 _errorTooltip.Hide(control);
             }
 
-            /* Dispose all controls from flow layout and get current selected method */
+            /* Clear all current parameter controls */
             flwParameters.Controls.DisposeAll();
+
+            /* Create a control for each parameter required by the method and add to UI flow layout */
             Method selectedMethod = _libraryManager.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+            Control[] parameterControls = _parameterManager.CreateParameterControls();
+            flwParameters.Controls.AddRange(parameterControls);
 
-            /* Create input controls for parameters, assign textchanged event for validation for textbox */
-            foreach (Parameter param in selectedMethod.Parameters)
+            /* Assign event to each textbox for validation */
+            foreach (Control textBox in parameterControls)
             {
-                Control paramInputControl = null;
-                bool paramIsBoolean = string.Equals(param.Type, "bool", StringComparison.OrdinalIgnoreCase);
-
-                if (paramIsBoolean)
+                if (textBox is TextBox)
                 {
-                    paramInputControl = new CheckBox();
-                    paramInputControl.Text = string.Format("{0} ({1})", param.Name, param.Type);
+                    textBox.TextChanged += TextChanged_RuleChecker;
                 }
-                else
-                {
-                    Label textBoxLabel = new Label();
-                    textBoxLabel.Size = new Size(200, textBoxLabel.Size.Height);
-                    textBoxLabel.Text = string.Format("{0} ({1})", param.Name, param.Type);
-                    flwParameters.Controls.Add(textBoxLabel);
-
-                    paramInputControl = new TextBox();
-                    ((TextBox)paramInputControl).ShortcutsEnabled = false;
-                    paramInputControl.TextChanged += TextChanged_RuleChecker;
-                }
-
-                /* Name control based on the parameter it takes input for, put into flow layout */
-                paramInputControl.Name = param.Name;
-                flwParameters.Controls.Add(paramInputControl);
             }
         }
 
         /// <summary>
-        /// Iterates through the parameter flow layout controls, associating all
-        /// values from textboxes and checkboxes with the parameter they were taking
-        /// input for by relating the name of the controls to the name of parameters of
-        /// the currently selected method.
+        /// Validates the value of a parameter textbox against the rules for the parameter it
+        /// represents. Upon failure, the last change is reverted and an error displayed.
         /// </summary>
-        /// <returns>Arguments for the current selected method.</returns>
-        private SOAPArgument[] CollectMethodArguments()
-        {
-            List<SOAPArgument> arguments = new List<SOAPArgument>();
-            Method selectedMethod = _libraryManager.GetMethod(SelectedWebServiceURL, SelectedMethodName);
-
-            /* Create argument objects by getting the value of the associated controls in the flow layout  */
-            foreach (Control control in flwParameters.Controls)
-            {
-                if (control is TextBox)
-                {
-                    SOAPArgument argument = new SOAPArgument();
-                    argument.Parameter = selectedMethod.Parameters.First(parameter => parameter.Name == control.Name);
-                    argument.Value = control.Text;
-                    arguments.Add(argument);
-                }
-                else if (control is CheckBox)
-                {
-                    SOAPArgument argument = new SOAPArgument();
-                    argument.Parameter = selectedMethod.Parameters.First(parameter => parameter.Name == control.Name);
-                    argument.Value = ((CheckBox)control).Checked.ToString();
-                    arguments.Add(argument);
-                }
-            }
-            return arguments.ToArray();
-        }
-
-        /// <summary>
-        /// Validates the text value of a parameter textbox, ensuring that the value entered
-        /// is satisfying the regex pattern for its corresponding parameter. If the regex 
-        /// pattern for the parameter is not valid, an error message is displayed and the change
-        /// reverted.
-        /// </summary>
-        /// <param name="parameterTextBox">A textbox with the name corresponding to the name of a parameter.</param>
+        /// <param name="parameterTextBox">A textbox created by <see cref="ParameterManager.CreateParameterControls"/></param>
         private void ValidateParameterTextBox(TextBox parameterTextBox)
         {
             /* Use the name of the textbox to get the corresponding parameter it is taking input for */
             Parameter parameter = _libraryManager.GetParameter(SelectedWebServiceURL,
                 SelectedMethodName, parameterTextBox.Name);
 
-            /* If there is a regex pattern for the paramater and text to validate, do so */
-            if (!string.IsNullOrEmpty(parameterTextBox.Text) &&
-                !string.IsNullOrEmpty(parameter.Regex) &&
-                !Regex.IsMatch(parameterTextBox.Text, parameter.Regex))
+            /* Check to see if value in textbox is valid */
+            bool isValid = _parameterManager.ValidateRegex(parameterTextBox);
+
+            if (!isValid)
             {
                 /* If invalid data was entered, remove last invalid character and keep cursor position */
                 int originalSelectionStart = parameterTextBox.SelectionStart - 1;
@@ -198,10 +146,10 @@ namespace WebServiceInterface
         private async Task<string> CallWebServiceMethod()
         {
             /* Get all the arguments entered by the user */
-            SOAPArgument[] arguments = CollectMethodArguments();
-
-            /* Get the currently selected method and call the web service method using user arguments (if any) */
             Method selectedMethod = _libraryManager.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+            SOAPArgument[] arguments = _parameterManager.CollectParameterArguments(flwParameters.Controls.ToArray());
+
+            /* Call the web service method using user arguments (if any) */
             SOAPWebService webService = new SOAPWebService(SelectedWebServiceURL);
             string soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
 
@@ -252,21 +200,31 @@ namespace WebServiceInterface
         {
             try
             {
-                /* Clear data grid of current data and disable send button */
-                grdviewResponse.DataSource = null;
-                btnSend.Enabled = false;
+                /* Ensure all required controls are filled out */
+                bool validParams = _parameterManager.ValidateRequired(flwParameters.Controls.ToArray());
 
-                /* Show TextBoard with current status and call web method */
-                txtbrdStatus.Show();
-                txtbrdStatus.Text = _resourceManager.GetString("Load_RetrieveResponse_Message");
-                grdviewResponse.UseWaitCursor = true;
-                txtbrdStatus.UseWaitCursor = true;
-                string response = await CallWebServiceMethod();
+                if (validParams)
+                {
+                    /* Clear data grid of current data and disable send button */
+                    grdviewResponse.DataSource = null;
+                    btnSend.Enabled = false;
 
-                /* Update status and begin loading results into grid */
-                txtbrdStatus.Text = _resourceManager.GetString("Load_LoadingResults_Message");
-                txtbrdStatus.Update();
-                DisplaySoapResponse(response);
+                    /* Show TextBoard with current status and call web method */
+                    DisplayLoadStatus(true);
+                    txtbrdStatus.Text = _resourceManager.GetString("Load_RetrieveResponse_Message");
+                    string response = await CallWebServiceMethod();
+
+                    /* Update status and begin loading results into grid */
+                    txtbrdStatus.Text = _resourceManager.GetString("Load_LoadingResults_Message");
+                    txtbrdStatus.Update();
+                    DisplaySoapResponse(response);
+                }
+                else
+                {
+                    MessageBox.Show(this, _resourceManager.GetString("Notify_RequiredParam_Message"),
+                        _resourceManager.GetString("Notify_RequiredParam_Caption"),
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             catch (SoapException ex)
             {
@@ -286,10 +244,20 @@ namespace WebServiceInterface
             {
                 /* Re-enable send button and hide the status box */
                 btnSend.Enabled = true;
-                grdviewResponse.UseWaitCursor = false;
-                txtbrdStatus.UseWaitCursor = false;
-                txtbrdStatus.Hide();
+                DisplayLoadStatus(false);
             }
+        }
+
+        /// <summary>
+        /// Shows or hides a textboard and wait cursor over the grid view, used
+        /// to show the user that loading is in progress.
+        /// </summary>
+        /// <param name="show">if set to <c>true</c> [show].</param>
+        private void DisplayLoadStatus(bool show)
+        {
+            txtbrdStatus.UseWaitCursor = show;
+            grdviewResponse.UseWaitCursor = show;
+            txtbrdStatus.Visible = show;
         }
 
         #region Events Handlers
@@ -321,6 +289,7 @@ namespace WebServiceInterface
 
         private void drpdwnMethods_SelectedIndexChanged(object sender, EventArgs e)
         {
+            _parameterManager.ActiveMethod = _libraryManager.GetMethod(SelectedWebServiceURL, SelectedMethodName);
             CreateParameterControls();
         }
 

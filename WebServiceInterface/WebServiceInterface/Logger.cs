@@ -36,5 +36,18 @@ namespace WebServiceInterface
                 }
             }
         }
+
+        public static void LogMessage(string logText)
+        {
+            lock (logLock)
+            {
+                using (StreamWriter w = File.AppendText("logs.log"))
+                {
+                    w.WriteLine(DateTime.Now);
+                    w.WriteLine(logText);
+                    w.WriteLine(new string('-', 160));
+                }
+            }
+        }
     }
 }

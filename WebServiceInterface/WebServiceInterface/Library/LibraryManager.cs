@@ -120,10 +120,18 @@ namespace WebServiceInterface.Library
 
                 Parameter[] parameters = method.Parameters;
 
-                foreach (Parameter parameter in parameters)
+                /* Process parameters only if this method has them */
+                if (parameters != null)
                 {
-                    WSDLType parameterTypeInfo = operation.InputTypeInformation.Types.Cast<WSDLType>().First(type => type.Name == parameter.Name);
-                    parameter.Type = parameterTypeInfo.Type;
+                    foreach (Parameter parameter in parameters)
+                    {
+                        WSDLType parameterTypeInfo = operation.InputTypeInformation.Types.Cast<WSDLType>().FirstOrDefault(type => type.Name == parameter.Name);
+
+                        if (parameterTypeInfo != null)
+                        {
+                            parameter.Type = parameterTypeInfo.Type;
+                        }
+                    }
                 }
 
                 SetMethod(method, info.Port.Location, operation.Name);

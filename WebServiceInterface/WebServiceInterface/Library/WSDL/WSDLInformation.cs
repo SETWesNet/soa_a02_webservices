@@ -23,17 +23,27 @@ namespace WebServiceInterface.Library.WSDL
             Operations = new List<WSDLOperation>();
         }
 
+        /// <summary>
+        /// Finds an operation by name
+        /// </summary>
+        /// <param name="name"> Operation </param>
+        /// <returns></returns>
         public WSDLOperation FindOperationByName(string name)
         {
             return Operations.Cast<WSDLOperation>().First(o => o.Name == name) ;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public WSDLOperation FindOperationByMessage(string message)
         {
             WSDLOperation result = null;
 
-            result = message.Contains("Response") ? Operations.Cast<WSDLOperation>().First(o => o.OutputMessage.Replace("tns:", "") == message) : 
-                                                    Operations.Cast<WSDLOperation>().First(o => o.InputMessage.Replace("tns:", "") == message);
+            result = message.Contains("Response") ? Operations.Cast<WSDLOperation>().FirstOrDefault(o => o.OutputMessage.Replace("tns:", "") == message) : 
+                                                    Operations.Cast<WSDLOperation>().FirstOrDefault(o => o.InputMessage.Replace("tns:", "") == message);
 
             return result;
         }
@@ -87,6 +97,12 @@ namespace WebServiceInterface.Library.WSDL
                 WSDLOperation currentInfo = null;
 
                 currentInfo = FindOperationByMessage(current.Name);
+
+                if (currentInfo == null)
+                {
+                    continue;
+                }
+                   
 
                 string type = GetParameterTypeByName(current.Name);
 

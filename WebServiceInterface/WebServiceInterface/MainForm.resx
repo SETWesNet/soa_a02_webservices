@@ -157,4 +157,12 @@
     <value>Loading Service Information...</value>
     <comment>Shown when the form is initializing and WSDL's are being loaded.</comment>
   </data>
+  <data name="Notify_RequiredParam_Caption" xml:space="preserve">
+    <value>Required Parameters</value>
+    <comment>Shown when the user tries to send a SOAP message without filling all required parameters</comment>
+  </data>
+  <data name="Notify_RequiredParam_Message" xml:space="preserve">
+    <value>Please fill all required parameters (marked with *) before submitting.</value>
+    <comment>Shown when the user tries to send a SOAP message without filling all required parameters</comment>
+  </data>
 </root>

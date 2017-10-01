@@ -15,13 +15,23 @@ namespace System.Windows.Forms.Extensions
         public static void DisposeAll(this Control.ControlCollection controlCollection)
         {
             /* Get a list of all current parameter controls */
-            Control[] listControls = controlCollection.Cast<Control>().ToArray();
+            Control[] listControls = controlCollection.ToArray();
 
             /* Remove each parameter control from the flow layout */
             foreach (Control control in listControls)
             {
                 control.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Returns the control collection as an array of controls.
+        /// </summary>
+        /// <param name="controlCollection">The control collection.</param>
+        /// <returns>An array of controls contained within the collection.</returns>
+        public static Control[] ToArray(this Control.ControlCollection controlCollection)
+        {
+            return controlCollection.Cast<Control>().ToArray();
         }
     }
 }

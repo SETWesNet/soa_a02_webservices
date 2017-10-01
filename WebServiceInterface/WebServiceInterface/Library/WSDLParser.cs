@@ -189,14 +189,16 @@ namespace WebServiceInterface
 
             return result;
         }
-        public WSDLInformation BuildWSDLInformation(WSDLInformation information)
+        public WSDLInformation BuildWSDLInformation()
         {
-            information = GetPort(information);
-            information = GetOperations(information);
-            information = GetPortTypes(information);
-            information = GetMessages(information);
+            WSDLInformation wsdlInformation = new WSDLInformation();
 
-            return information;
+            wsdlInformation = GetPort(wsdlInformation);
+            wsdlInformation = GetOperations(wsdlInformation);
+            wsdlInformation = GetPortTypes(wsdlInformation);
+            wsdlInformation = GetMessages(wsdlInformation);
+
+            return wsdlInformation;
         }
 
 

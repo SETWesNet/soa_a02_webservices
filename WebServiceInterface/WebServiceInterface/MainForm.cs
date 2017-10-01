@@ -17,14 +17,16 @@ using System.Net.Http;
 using System.Net;
 using System.Diagnostics;
 using System.Web.Services.Protocols;
+using WebServiceInterface.Library.WSDL;
 
 namespace WebServiceInterface
 {
     public partial class MainForm : Form
     {
         private LibraryManager _configLibrary = new LibraryManager("config.json");
-        private ResourceManager _resourceManager = new ResourceManager(typeof(MainForm));
+        private SOAPWebService _webService;
 
+        private ResourceManager _resourceManager = new ResourceManager(typeof(MainForm));
         private ToolTip _errorTooltip = new ToolTip();
 
         public MainForm()
@@ -40,6 +42,8 @@ namespace WebServiceInterface
             drpdwnMethods.ValueMember = nameof(Method.Name);
             WebService selectedService = _configLibrary.GetService(SelectedWebServiceURL);
             drpdwnMethods.DataSource = selectedService.Methods;
+
+            _webService = new SOAPWebService(SelectedWebServiceURL);
         }
 
         #region Properties
@@ -188,8 +192,7 @@ namespace WebServiceInterface
 
             /* Get the currently selected method and call the web service method using user arguments (if any) */
             Method selectedMethod = _configLibrary.GetMethod(SelectedWebServiceURL, SelectedMethodName);
-            SOAPWebService webService = new SOAPWebService(SelectedWebServiceURL); //TODO (Kyle): Make this not hardcoded
-            string soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
+            string soapResponse = await _webService.CallMethodAsync(selectedMethod, arguments);
 
             return soapResponse;
         }
@@ -244,13 +247,13 @@ namespace WebServiceInterface
 
                 /* Show TextBoard with current status and call web method */
                 txtbrdStatus.Show();
-                txtbrdStatus.Text = "Retrieving Response, Please Wait...";
+                txtbrdStatus.Text = _resourceManager.GetString("Load_RetrieveResponse_Message");
                 grdviewResponse.UseWaitCursor = true;
                 txtbrdStatus.UseWaitCursor = true;
                 string response = await CallWebServiceMethod();
 
                 /* Update status and begin loading results into grid */
-                txtbrdStatus.Text = "Loading Results, Please Wait...";
+                txtbrdStatus.Text = _resourceManager.GetString("Load_LoadingResults_Message");
                 txtbrdStatus.Update();
                 DisplaySoapResponse(response);
             }
@@ -297,6 +300,7 @@ namespace WebServiceInterface
         {
             WebService selectedService = _configLibrary.GetService(SelectedWebServiceURL);
             drpdwnMethods.DataSource = selectedService.Methods;
+            _webService.ServiceURL = SelectedWebServiceURL;
         }
 
         private void drpdwnMethods_SelectedIndexChanged(object sender, EventArgs e)

@@ -145,4 +145,12 @@
     <value>The web service reported an error. Please ensure that the method parameters are valid, and please try again.</value>
     <comment>Used when a soap fault occurs.</comment>
   </data>
+  <data name="Load_LoadingResults_Message" xml:space="preserve">
+    <value>Loading Results, Please Wait...</value>
+    <comment>Shown when loading SOAP result contents into a UI control for display.</comment>
+  </data>
+  <data name="Load_RetrieveResponse_Message" xml:space="preserve">
+    <value>Retrieving Response, Please Wait...</value>
+    <comment>Shown when waiting for a SOAP response.</comment>
+  </data>
 </root>

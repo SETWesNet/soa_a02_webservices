@@ -100,6 +100,7 @@ namespace WebServiceInterface.Library
                 WSDLParser wsdlParser = new WSDLParser(wsdlXml);
                 WSDLInformation wsdlInfo = wsdlParser.BuildWSDLInformation();
                 MergeWithWSDL(wsdlInfo);
+                int i = 0;
             }
         }
 
@@ -122,8 +123,12 @@ namespace WebServiceInterface.Library
 
                 foreach (Parameter parameter in parameters)
                 {
-                    WSDLType parameterTypeInfo = operation.InputTypeInformation.Types.Cast<WSDLType>().First(type => type.Name == parameter.Name);
-                    parameter.Type = parameterTypeInfo.Type;
+                    WSDLType parameterTypeInfo = operation.InputTypeInformation.Types.Cast<WSDLType>().FirstOrDefault(type => type.Name == parameter.Name);
+
+                    if (parameterTypeInfo != null)
+                    {
+                        parameter.Type = parameterTypeInfo.Type;
+                    }
                 }
 
                 SetMethod(method, info.Port.Location, operation.Name);

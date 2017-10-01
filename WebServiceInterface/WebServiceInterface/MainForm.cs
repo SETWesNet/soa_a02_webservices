@@ -29,7 +29,7 @@ namespace WebServiceInterface
 {
     public partial class MainForm : Form
     {
-        private LibraryManager _libraryManager = new LibraryManager("config.json");
+        private LibraryManager _libraryManager = null;
         private ParameterManager _parameterManager = new ParameterManager(null);
 
         private ResourceManager _resourceManager = new ResourceManager(typeof(MainForm));
@@ -73,6 +73,17 @@ namespace WebServiceInterface
         /// <returns>Task</returns>
         private async Task InitializeForm()
         {
+            try
+            {
+                _libraryManager = new LibraryManager("config.json");
+            }
+            catch(Exception e) when (e is FileNotFoundException)
+            {
+                Logger.Log(e);
+                MessageBox.Show(e.Message);
+                Application.Exit();
+            }
+
             /* Show loading status */
             txtbrdStatus.Text = _resourceManager.GetString("Load_ServiceInformation_Message");
             DisplayLoadStatus(true);

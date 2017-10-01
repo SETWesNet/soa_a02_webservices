@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using WebServiceInterface.Library;
 using WebServiceInterface.Library.WSDL;
+using WebServiceInterface.Extension_Methods;
+
 
 namespace WebServiceInterface
 {
@@ -91,14 +93,22 @@ namespace WebServiceInterface
             return info;
         }
         
+        /// <summary>
+        /// Goes through and gets all proper bindings 
+        /// </summary>
+        /// <param name="info"></param>
+        /// <returns></returns>
         public WSDLInformation GetOperations(WSDLInformation info)
         {
+            // Grab the binding and find the bindng that we want 
             string binding = info.Port.Binding;
-            XmlNode bindingNode = _bindingNodes.Cast<XmlNode>().First(e => e.Attributes["name"].InnerText == binding);
+            XmlNode bindingNode = _bindingNodes.Cast<XmlNode>().First(e => e.GetTextAttribute("name", "wsdl:binding") == binding);
 
-            info.Operations =  bindingNode.ChildNodes.Cast<XmlNode>()
+            // Go through each operation and create an object out of the name and the soapAction 
+
+            info.Operations = bindingNode.ChildNodes.Cast<XmlNode>()
                                .Where(e => e.Name == "wsdl:operation")
-                               .Select(e => new WSDLOperation(e.Attributes["name"].InnerText, e.FirstChild.Attributes["soapAction"].InnerText))
+                               .Select(e => new WSDLOperation(e.GetTextAttribute("name", "wsdl:operation"), e.FirstChild.GetTextAttribute("soapAction", "wsdl:part")))
                                .ToList();
 
             return info;
@@ -115,7 +125,7 @@ namespace WebServiceInterface
 
             foreach(XmlNode o in operations)
             {
-                string operationName = o.Attributes["name"].InnerText;
+                string operationName = o.GetTextAttribute("name", "wsdl:operation");
 
                 WSDLOperation operation = info.FindOperationByName(operationName);
 
@@ -125,13 +135,13 @@ namespace WebServiceInterface
                     operation.Documentation = documentationNode.InnerText;
                 }
 
-                operation.Input  =        o.ChildNodes.Cast<XmlNode>()
-                                          .First(e => e.Name == "wsdl:input")
-                                          .Attributes["message"].InnerText;
+                XmlNode inputNode = o.ChildNodes.Cast<XmlNode>().First(e => e.Name == "wsdl:input");
+                operation.Input = inputNode.GetTextAttribute("message", "wsdl:input");
 
-                operation.Output  = o.ChildNodes.Cast<XmlNode>()
-                                          .First(e => e.Name == "wsdl:output")
-                                          .Attributes["message"].InnerText;
+
+                XmlNode outputNode = o.ChildNodes.Cast<XmlNode>().First(e => e.Name == "wsdl:output");
+                operation.Output   = outputNode.GetTextAttribute("message", "wsdl:input");
+
             }
 
             return info;

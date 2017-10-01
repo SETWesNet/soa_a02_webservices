@@ -1,11 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿/* 
+ *  
+ *  Filename: TextBoard.cs
+ *  
+ *  Date: 2017-10-01
+ *  
+ *  Name: Colin Mills, Kyle Kreutzer
+ *  
+ * Description:
+ * Holds the definition of the TextBoard class
+ * 
+ */
+
 using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WebServiceInterface

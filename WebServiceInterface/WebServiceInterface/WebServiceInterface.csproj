@@ -53,6 +53,7 @@
     <Compile Include="Exceptions\WSDLNodeNotFoundException.cs" />
     <Compile Include="Extension Methods\ControlCollectionExtensions.cs" />
     <Compile Include="Extension Methods\XmlNodeExtensions.cs" />
+    <Compile Include="Library\WSDL\WSDLHelpers.cs" />
     <Compile Include="Library\LibraryManager.cs" />
     <Compile Include="Library\Parameter.cs" />
     <Compile Include="Library\Method.cs" />

@@ -1,4 +1,16 @@
-﻿using System.Linq;
+﻿/* 
+ *  
+ *  Filename: SOAPWebService.cs
+ *  
+ *  Date: 2017-10-01
+ *  
+ *  Name: Colin Mills, Kyle Kreutzer
+ *  
+ * Description:
+ * Holds the definition of the SOAPWebService class
+ * 
+ */
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -10,6 +22,9 @@ using System.Web.Services.Protocols;
 
 namespace WebServiceInterface
 {
+    /// <summary>
+    /// Represents a convient way to interact with SOAP web services
+    /// </summary>
     class SOAPWebService
     {
         private string _serviceURL;

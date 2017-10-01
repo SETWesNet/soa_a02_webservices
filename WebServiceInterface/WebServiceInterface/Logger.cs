@@ -1,4 +1,17 @@
-﻿using System;
+﻿/* 
+ *  
+ *  Filename: Logger.cs
+ *  
+ *  Date: 2017-10-01
+ *  
+ *  Name: Colin Mills, Kyle Kreutzer
+ *  
+ * Description:
+ * Holds the definition of the Logger class
+ * 
+ */
+
+using System;
 using System.IO;
 
 namespace WebServiceInterface
@@ -36,6 +49,11 @@ namespace WebServiceInterface
                 }
             }
         }
+
+        /// <summary>
+        /// Logs a pure text message to the log file seperated by '-'. This method is threadsafe.
+        /// </summary>
+        /// <param name="logText">The log text.</param>
         public static void LogMessage(string logText)
         {
             lock (logLock)

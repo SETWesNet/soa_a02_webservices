@@ -1,16 +1,28 @@
-﻿using System;
+﻿/* 
+ *  
+ *  Filename: WSDLParser.cs
+ *  
+ *  Date: 2017-10-01
+ *  
+ *  Name: Colin Mills, Kyle Kreutzer
+ *  
+ * Description:
+ * Holds the definition of the WSDLParser class
+ * 
+ */
+
 using System.Xml;
-using System.Text;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
 using WebServiceInterface.Library;
 using WebServiceInterface.Library.WSDL;
 using WebServiceInterface.Extension_Methods;
 
-
 namespace WebServiceInterface
 {
+    /// <summary>
+    /// A WSDL Parser holds all the parsing logic for dealing with WSDLs. It has the ability to generate TypeInformation for a wsdl and WSDLInformation
+    /// </summary>
     class WSDLParser
     {
         /* 
@@ -26,13 +38,11 @@ namespace WebServiceInterface
         private XmlNodeList _schemaNodes;
 
 
-        const string SOAP_SUFFIX = "Soap";
-        const string SOAP_12_SUFFIX = "Soap12";
 
         /// <summary>
-        /// Constructs a new WSDLParser
+        /// Initializes a new instance of the <see cref="WSDLParser"/> class.
         /// </summary>
-        /// <param name="wsdl">The XML document to parse </param>
+        /// <param name="wsdl">The WSDL.</param>
         public WSDLParser(XmlDocument wsdl)
         {
             _wsdlRaw = wsdl;
@@ -44,11 +54,11 @@ namespace WebServiceInterface
             _schemaNodes = _wsdlRaw.GetElementsByTagName("s:schema");
         }
 
-        private string TrimNamespace(string s)
-        {
-            return s.Replace("tns:", "");
-        }
-
+        /// <summary>
+        /// Gets the namespace from the WSDL XmlStructure.
+        /// </summary>
+        /// <param name="info">The information.</param>
+        /// <returns></returns>
         public WSDLInformation GetNamespace(WSDLInformation info)
         {
             XmlNode schema = _schemaNodes.Cast<XmlNode>().FirstOrDefault();
@@ -72,12 +82,12 @@ namespace WebServiceInterface
             info.Service.Name = first.GetTextAttribute("name", "wsdl:service");
             info.BaseName = info.Service.Name;
 
-            string portKey = info.Service.Name += SOAP_12_SUFFIX;
+            string portKey = info.Service.Name += WSDLHelpers.SOAP_12_SUFFIX;
 
             XmlNode portNode = _portNodes.Cast<XmlNode>().First(p => p.GetTextAttribute("name", "wsdl:portNode") == portKey);
 
-            info.Port.Name = TrimNamespace(portNode.GetTextAttribute("name", "wsdl:portNode"));
-            info.Port.Binding = TrimNamespace(portNode.GetTextAttribute("binding", "wsdl:portNode"));
+            info.Port.Name =    WSDLHelpers.TrimNamespace(portNode.GetTextAttribute("name", "wsdl:portNode"));
+            info.Port.Binding = WSDLHelpers.TrimNamespace(portNode.GetTextAttribute("binding", "wsdl:portNode"));
             info.Port.Location = portNode.FirstChild.GetTextAttribute("location", "soap:address");
 
             return info;
@@ -112,7 +122,7 @@ namespace WebServiceInterface
         /// <returns></returns>
         public WSDLInformation GetPortTypes(WSDLInformation info)
         {
-            string portTypeKey = info.BaseName += SOAP_SUFFIX;
+            string portTypeKey = info.BaseName += WSDLHelpers.SOAP_SUFFIX;
 
             XmlNode portTypeNode = _portTypeNodes.Cast<XmlNode>()
                                        .First(portType => portType.GetTextAttribute("name", "wsdl:portType") == portTypeKey);

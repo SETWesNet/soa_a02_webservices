@@ -41,7 +41,7 @@ namespace WebServiceInterface
 
         public WSDLInformation GetNamespace(WSDLInformation info)
         {
-            XmlNode node = _schemaNodes.Cast<XmlNode>().First();
+            XmlNode node = _schemaNodes.Cast<XmlNode>().FirstOrDefault();
 
             info.Namespace = node.Attributes["targetNamespace"].InnerText;
 
@@ -119,9 +119,11 @@ namespace WebServiceInterface
 
                 WSDLOperation operation = info.FindOperationByName(operationName);
 
-                operation.Documentation = o.ChildNodes.Cast<XmlNode>()
-                                          .First(e => e.Name == "wsdl:documentation")
-                                          .InnerText;
+                XmlNode documentationNode = o.ChildNodes.Cast<XmlNode>().FirstOrDefault(e => e.Name == "wsdl:documentation");
+                if (operation.Documentation != null)
+                {
+                    operation.Documentation = documentationNode.InnerText;
+                }
 
                 operation.Input  =        o.ChildNodes.Cast<XmlNode>()
                                           .First(e => e.Name == "wsdl:input")

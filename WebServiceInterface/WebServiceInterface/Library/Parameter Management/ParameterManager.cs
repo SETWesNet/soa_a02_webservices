@@ -116,6 +116,7 @@ namespace WebServiceInterface.Library
                     argument.Parameter = _activeMethod.Parameters.First(parameter => parameter.Name == control.Name);
                     argument.Value = control.Text;
                     arguments.Add(argument);
+                    control.Text = "";
                 }
                 else if (control is CheckBox)
                 {

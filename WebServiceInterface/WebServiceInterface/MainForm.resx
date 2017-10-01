@@ -153,4 +153,8 @@
     <value>Retrieving Response, Please Wait...</value>
     <comment>Shown when waiting for a SOAP response.</comment>
   </data>
+  <data name="Load_ServiceInformation_Message" xml:space="preserve">
+    <value>Loading Service Information...</value>
+    <comment>Shown when the form is initializing and WSDL's are being loaded.</comment>
+  </data>
 </root>

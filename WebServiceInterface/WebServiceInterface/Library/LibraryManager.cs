@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 using System.Linq;
 using WebServiceInterface.Library.WSDL;
 using System.Collections.Generic;
+using System.Xml;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace WebServiceInterface.Library
 {
@@ -32,9 +35,10 @@ namespace WebServiceInterface.Library
 
         public Method GetMethod(string serviceURL, string methodName)
         {
+            /* Find the webservice from the config that matches the WSDL */
+            WebService service = _services.FirstOrDefault(s => CheckIfSameUrl(s.Url, serviceURL));
+            
             Method result = null;
-
-            WebService service = _services.FirstOrDefault(s => s.Url == serviceURL);
 
             if (service != null)
             {
@@ -49,6 +53,7 @@ namespace WebServiceInterface.Library
             Method method = GetMethod(serviceURL, methodName);
             return method.Parameters;
         }
+
         public Parameter GetParameter(string serviceURL, string methodName, string parameterName)
         {
             return _services.First(service => service.Url == serviceURL)
@@ -66,7 +71,7 @@ namespace WebServiceInterface.Library
 
             foreach(WebService currentService in _services)
             {
-                if (currentService.Url == serviceUrl)
+                if (CheckIfSameUrl(currentService.Url, serviceUrl))
                 {
                     for(int j = 0; j < currentService.Methods.Count(); ++j)
                     {
@@ -82,14 +87,27 @@ namespace WebServiceInterface.Library
                 }
             }
 
-
             service.Methods.SetValue(newMethod, methodIndex);
         }
 
-        public void MergeWithWSDL(WSDLInformation info)
+        public async Task LoadWSDLsAsync()
         {
-            foreach(WSDLOperation operation in info.Operations)
+            /* Apply WSDL information to each service */
+            foreach (WebService service in _services)
             {
+                XmlDocument wsdlXml = await SOAPWebService.GetWSDLAsync(service.Url);
+
+                WSDLParser wsdlParser = new WSDLParser(wsdlXml);
+                WSDLInformation wsdlInfo = wsdlParser.BuildWSDLInformation();
+                MergeWithWSDL(wsdlInfo);
+            }
+        }
+
+        private void MergeWithWSDL(WSDLInformation info)
+        {
+            foreach (WSDLOperation operation in info.Operations)
+            {
+
                 Method method = GetMethod(info.Port.Location, operation.Name);
 
                 if (method == null)
@@ -102,7 +120,7 @@ namespace WebServiceInterface.Library
 
                 Parameter[] parameters = method.Parameters;
 
-                foreach(Parameter parameter in parameters)
+                foreach (Parameter parameter in parameters)
                 {
                     WSDLType parameterTypeInfo = operation.InputTypeInformation.Types.Cast<WSDLType>().First(type => type.Name == parameter.Name);
                     parameter.Type = parameterTypeInfo.Type;
@@ -110,6 +128,30 @@ namespace WebServiceInterface.Library
 
                 SetMethod(method, info.Port.Location, operation.Name);
             }
+        }
+
+        /// <summary>
+        /// Checks if two URL's are the same by comparing them without the
+        /// http:// or https:// headers.
+        /// </summary>
+        /// <param name="firstUrl">The first URL.</param>
+        /// <param name="secondUrl">The second URL.</param>
+        /// <returns>True if same URL, false otherwise.</returns>
+        private static bool CheckIfSameUrl(string firstUrl, string secondUrl)
+        {
+            const string httpPattern = "https?:\\/\\/";
+
+            /* Remove the HTTP header from the URL's */
+            string basefirstUrl = Regex.Replace(firstUrl, httpPattern, "");
+            string baseSecondUrl = Regex.Replace(secondUrl, httpPattern, "");
+
+            bool isSame = false;
+
+            if (basefirstUrl == baseSecondUrl)
+            {
+                isSame = true;
+            }
+            return isSame;
         }
     }
 }

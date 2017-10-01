@@ -105,6 +105,7 @@
             // 
             this.btnSend.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSend.Enabled = false;
             this.btnSend.Location = new System.Drawing.Point(10, 655);
             this.btnSend.Name = "btnSend";
             this.btnSend.Size = new System.Drawing.Size(632, 72);

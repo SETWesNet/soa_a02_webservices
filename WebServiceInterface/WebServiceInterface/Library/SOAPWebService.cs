@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -16,7 +15,6 @@ namespace WebServiceInterface
         private string _serviceURL;
         const string DOT_NET_WSDL_SUFFIX = "?WSDL";
         private static HttpClient _httpClient = new HttpClient();
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SOAPWebService"/> class, which
@@ -62,7 +60,7 @@ namespace WebServiceInterface
             string soapEnvelope = CreateSoapEnvelope(method, arguments);
             string resultContents = "";
 
-            /* Send envelope to web service and process the response, getting back the contents of the result tag*/
+            /* Send envelope to web service and process the response, getting back the contents of the result tag */
             using (StringContent content = new StringContent(soapEnvelope, Encoding.UTF8, "application/soap+xml"))
             {
                 using (HttpResponseMessage response = await _httpClient.PostAsync(_serviceURL, content))
@@ -114,20 +112,37 @@ namespace WebServiceInterface
         }
 
 
+        /// <summary>
+        /// Creates a SOAP envelope that is used to call a method on a
+        /// web service.
+        /// </summary>
+        /// <param name="method">The method to call.</param>
+        /// <param name="arguments">Arguments for the method (if any).</param>
+        /// <returns>A SOAP envelope</returns>
         private static string CreateSoapEnvelope(Method method, SOAPArgument[] arguments)
         {
-            string envelopeString = "<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-                                    "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-                                    "xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">" +
-                                    "<soap12:Body>";
+            StringBuilder envelope = new StringBuilder();
 
-            envelopeString += "<GetAirportInformationByCountry xmlns=\"http://www.webserviceX.NET\">" +
-                              "<country>Canada</country>" +
-                              "</GetAirportInformationByCountry>" +
-                              "</soap12:Body>" +
-                              "</soap12:Envelope>";
+            /* Create the top tags for a soap 1.2 envelope */
+            envelope.Append("<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+                            "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
+                            "xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">" +
+                            "<soap12:Body>");
 
-            return envelopeString;
+            /* Create opening method tag with the namespace of the method */
+            envelope.AppendFormat("<{0} xmlns=\"{1}\">", method.Name, method.Namespace);
+
+            /* Create element for each parameter and put in argument values */
+            foreach (SOAPArgument arg in arguments)
+            {
+                envelope.AppendFormat("<{0}>{1}</{0}>", arg.Parameter.Name, arg.Value);
+            }
+
+            /* Create closing method tag and close off soap body and envelope */
+            envelope.AppendFormat("</{0}>", method.Name);
+            envelope.Append("</soap12:Body></soap12:Envelope>");
+
+            return envelope.ToString();
         }
 
         /// <summary>
@@ -164,7 +179,8 @@ namespace WebServiceInterface
         #region WSDL
 
         /// <summary>
-        /// A method to "normalize" WSDL urls. If you pass it a page with .asmx it will append a "?WSDL" to the end. If another service is chosen it uses the .wsdl convention.
+        /// A method to "normalize" WSDL urls. If you pass it a page with .asmx it will append
+        /// a "?WSDL" to the end. If another service is chosen it uses the .wsdl convention.
         /// </summary>
         /// <param name="serviceUrl">The service url we are normalizing</param>
         /// <returns></returns>
@@ -172,7 +188,6 @@ namespace WebServiceInterface
         {
             string[] parts = serviceUrl.Split('/');
 
-            // TODO(c-jm): This may need some work, do testing with "www.abc.com/service.wsdl" services
             string normalizedUrl = serviceUrl;
 
             if (parts.Last().EndsWith(".asmx"))
@@ -184,13 +199,22 @@ namespace WebServiceInterface
         }
 
         /// <summary>
-        /// Gets the WSDL document for the currently active web service.
+        /// Gets the WSDL document for the currently active SOAP service.
         /// </summary>
         /// <returns>The WSDL as an XmlDocument.</returns>
         public async Task<XmlDocument> GetWSDLAsync()
         {
+            return await GetWSDLAsync(_serviceURL);
+        }
+
+        /// <summary>
+        /// Gets a WSDL document for the specified SOAP service URL.
+        /// </summary>
+        /// <returns>The WSDL as an XmlDocument.</returns>
+        public async static Task<XmlDocument> GetWSDLAsync(string serviceURL)
+        {
             /* Normalize URL based on the web service extension */
-            string normalizedURL = NormalizeWSDLUrl(_serviceURL);
+            string normalizedURL = NormalizeWSDLUrl(serviceURL);
             XmlDocument wsdl = new XmlDocument();
 
             /* Request wsdl and load information into XmlDocument object  */

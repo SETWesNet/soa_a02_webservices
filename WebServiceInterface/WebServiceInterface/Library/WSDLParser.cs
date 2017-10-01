@@ -17,6 +17,7 @@ namespace WebServiceInterface
         private XmlNodeList _portTypeNodes;
         private XmlNodeList _messageNodes;
         private XmlNodeList _complexTypeNodes;
+        private XmlNodeList _schemaNodes;
 
 
         const string SOAP_SUFFIX = "Soap";
@@ -30,11 +31,21 @@ namespace WebServiceInterface
             _portTypeNodes = _wsdlRaw.GetElementsByTagName("wsdl:portType");
             _messageNodes = _wsdlRaw.GetElementsByTagName("wsdl:message");
             _complexTypeNodes = _wsdlRaw.GetElementsByTagName("s:complexType");
+            _schemaNodes = _wsdlRaw.GetElementsByTagName("s:schema");
         }
 
         private string TrimNamespace(string s)
         {
             return s.Replace("tns:", "");
+        }
+
+        public WSDLInformation GetNamespace(WSDLInformation info)
+        {
+            XmlNode node = _schemaNodes.Cast<XmlNode>().First();
+
+            info.Namespace = node.Attributes["targetNamespace"].InnerText;
+
+            return info;
         }
 
         /// <summary>
@@ -124,6 +135,11 @@ namespace WebServiceInterface
             return info;
         }
 
+        /// <summary>
+        /// Get all wsdl:messages and apply them to predefined operations 
+        /// </summary>
+        /// <param name="info"> The WSDLInformation that we modifying </param>
+        /// <returns></returns>
         public WSDLInformation GetMessages(WSDLInformation info)
         {
             List<XmlNode> soapMessages = _messageNodes.Cast<XmlNode>()
@@ -132,16 +148,18 @@ namespace WebServiceInterface
 
             foreach(XmlNode message in soapMessages)
             {
+                // Grab the name of the message and find the type (whether its an input or output type message).
                 string name = message.Attributes["name"].InnerText;
 
                 string type = info.GetParameterTypeByName(name);
 
+                // Find the operation that we are dealing with
                 WSDLOperation operation = info.FindOperationByParameter(name);
 
-                // NOTE(c-jm): We are making an assumption that messages only have ONE part! This is the case on webServiceX
-
+                // Grab the first part.
                 XmlNode partNode = message.FirstChild;
 
+                // Determine if its an input or output message and store accordingly.
                 if (type == "IN")
                 {
                     operation.InputMessage = partNode.Attributes["element"].InnerText;
@@ -155,13 +173,19 @@ namespace WebServiceInterface
             return info; 
         }
 
-        public List<WSDLTypeInformation> BuildTypeInformation()
+        /// <summary>
+        /// Since types need to be handled differently then other nodes in the tree. We build the type ifnormation seperately returns a list of WSDLTypeInformation 
+        /// </summary>
+        /// <returns></returns>
+        private List<WSDLTypeInformation> BuildTypeInformation()
         {
             List<WSDLTypeInformation> result = new List<WSDLTypeInformation>();
 
             foreach(XmlNode complexType in _complexTypeNodes)
             {
                 WSDLTypeInformation typeInformation = new WSDLTypeInformation();
+
+                // Grab the parent of the complex node. If there is a parent it is an s:element which has the name.
                 XmlNode parent = complexType.ParentNode;
 
                 if (parent == null)
@@ -170,13 +194,16 @@ namespace WebServiceInterface
                 }
                 else
                 {
+                    // If it deosnt have a parent then the name is purely on s:complexNode
                     typeInformation.Name = parent.Attributes["name"].InnerText; 
                 }
 
+                // Grab the first sequence in the complex node.
                 XmlNode sequence = complexType.ChildNodes.Cast<XmlNode>().FirstOrDefault(e => e.Name == "s:sequence");
 
                 if (sequence != null)
                 {
+                    // Then select all the s:elements within that complex node and convert them into WSDLTypes
                     typeInformation.Types = sequence.ChildNodes.Cast<XmlNode>()
                                .Where(e => e.Name == "s:element")
                                .Select(e => new WSDLType(e.Attributes["name"].InnerText, e.Attributes["type"].InnerText))
@@ -184,19 +211,30 @@ namespace WebServiceInterface
                                .ToList();
                 }
 
+                // We then add that to the list within the Typeinfromation so it is a list of types keyed by a name 
                 result.Add(typeInformation);
             }
 
             return result;
         }
+        
+        /// <summary>
+        /// Helper convience method that parses the XML document in the correct order while applying the type
+        /// </summary>
+        /// <returns></returns>
         public WSDLInformation BuildWSDLInformation()
         {
             WSDLInformation wsdlInformation = new WSDLInformation();
 
+            wsdlInformation = GetNamespace(wsdlInformation);
             wsdlInformation = GetPort(wsdlInformation);
             wsdlInformation = GetOperations(wsdlInformation);
             wsdlInformation = GetPortTypes(wsdlInformation);
             wsdlInformation = GetMessages(wsdlInformation);
+
+            List<WSDLTypeInformation> typeInfo = BuildTypeInformation();
+
+            wsdlInformation.ApplyTypeInformation(typeInfo);
 
             return wsdlInformation;
         }

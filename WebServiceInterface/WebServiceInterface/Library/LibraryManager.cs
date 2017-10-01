@@ -96,7 +96,9 @@ namespace WebServiceInterface.Library
                 {
                     continue;
                 }
+
                 method.Response = operation.OutputTypeInformation.Types.Cast<WSDLType>().First();
+                method.Namespace = info.Namespace;
 
                 Parameter[] parameters = method.Parameters;
 

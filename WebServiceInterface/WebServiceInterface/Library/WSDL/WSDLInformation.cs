@@ -8,6 +8,7 @@ namespace WebServiceInterface.Library.WSDL
 {
     class WSDLInformation
     {
+        public string Namespace { get; set; }
         public string BaseName { get; set; }
 
         public WSDLService Service { get; set; }

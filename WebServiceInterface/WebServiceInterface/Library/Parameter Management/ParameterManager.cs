@@ -1,17 +1,34 @@
-﻿using System;
+﻿/* 
+ *  
+ *  Filename: WSDLTypeInformation.cs
+ *  
+ *  Date: 2017-10-01
+ *  
+ *  Name: Colin Mills, Kyle Kreutzer
+ *  
+ * Description:
+ * Holds the definition of the ParameterManager class
+ * 
+ */
+
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WebServiceInterface.Library
 {
+    /// <summary>
+    /// Responsible for dynamically creating, validating, and managing
+    /// controls that are used for entering parameter information for a 
+    /// web service.
+    /// </summary>
     class ParameterManager
     {
         Method _activeMethod;
+
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ParameterManager"/> class.
@@ -21,6 +38,8 @@ namespace WebServiceInterface.Library
         {
             _activeMethod = activeMethod;
         }
+
+        #endregion  
 
         #region Properties
 

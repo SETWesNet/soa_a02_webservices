@@ -165,4 +165,12 @@
     <value>Please fill all required parameters (marked with *) before submitting.</value>
     <comment>Shown when the user tries to send a SOAP message without filling all required parameters</comment>
   </data>
+  <data name="Error_wsdlLoad_Caption" xml:space="preserve">
+    <value>Service Load Error</value>
+    <comment>Shown when any number of WSDL's fails to load.</comment>
+  </data>
+  <data name="Error_wsdlLoad_Message" xml:space="preserve">
+    <value>One or more web services have failed to load. Please check your internet connection. If connection is OK, the server for the failed services may be down, or the application config data may be invalid.</value>
+    <comment>Shown when any number of WSDL's fails to load.</comment>
+  </data>
 </root>

@@ -12,21 +12,18 @@
  */
 
 using System;
-using System.Windows.Forms;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using WebServiceInterface.Library;
-using System.Text.RegularExpressions;
-using System.Media;
-using System.Windows.Forms.Extensions;
 using System.Data;
 using System.IO;
-using System.Resources;
-using System.Xml;
+using System.Linq;
+using System.Media;
 using System.Net.Http;
+using System.Resources;
+using System.Threading.Tasks;
 using System.Web.Services.Protocols;
-using System.Drawing;
+using System.Windows.Forms;
+using System.Windows.Forms.Extensions;
+using System.Xml;
+using WebServiceInterface.Library;
 
 namespace WebServiceInterface
 {
@@ -38,6 +35,9 @@ namespace WebServiceInterface
         private ResourceManager _resourceManager = new ResourceManager(typeof(MainForm));
         private ToolTip _errorTooltip = new ToolTip();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainForm"/> class.
+        /// </summary>
         public MainForm()
         {
             InitializeComponent();
@@ -66,9 +66,11 @@ namespace WebServiceInterface
         #endregion
 
         /// <summary>
-        /// Initializes the form.
+        /// Initializes the form by loading in WSDL information into the libraryManager,
+        /// applying information to the web service and method dropdowns, all while showing
+        /// a loading status.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Task</returns>
         private async Task InitializeForm()
         {
             /* Show loading status */
@@ -76,7 +78,14 @@ namespace WebServiceInterface
             DisplayLoadStatus(true);
 
             /* Load WSDL information for each service in library */
-            await _libraryManager.LoadWSDLsAsync();
+            bool loadSuccess = await _libraryManager.LoadWSDLsAsync();
+
+            if (!loadSuccess)
+            {
+                MessageBox.Show(this, _resourceManager.GetString("Error_wsdlLoad_Message"),
+                    _resourceManager.GetString("Error_wsdlLoad_Caption"),
+                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
 
             /* Initialize Drop Downs */
             drpdwnWebServices.DisplayMember = nameof(WebService.Name);
@@ -85,8 +94,13 @@ namespace WebServiceInterface
 
             drpdwnMethods.DisplayMember = nameof(Method.Name);
             drpdwnMethods.ValueMember = nameof(Method.Name);
+
+            /* Apply methods to method dropdown, only if services are loaded */
             WebService selectedService = _libraryManager.GetService(SelectedWebServiceURL);
-            drpdwnMethods.DataSource = selectedService.Methods;
+            if (selectedService != null)
+            {
+                drpdwnMethods.DataSource = selectedService.Methods;
+            }
 
             /* Hide loading status and enable send button */
             DisplayLoadStatus(false);
@@ -166,9 +180,14 @@ namespace WebServiceInterface
             Method selectedMethod = _libraryManager.GetMethod(SelectedWebServiceURL, SelectedMethodName);
             SOAPArgument[] arguments = _parameterManager.CollectParameterArguments(flwParameters.Controls.ToArray());
 
+            string soapResponse = "";
+
             /* Call the web service method using user arguments (if any) */
-            SOAPWebService webService = new SOAPWebService(SelectedWebServiceURL);
-            string soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
+            if (selectedMethod != null)
+            {
+                SOAPWebService webService = new SOAPWebService(SelectedWebServiceURL);
+                soapResponse = await webService.CallMethodAsync(selectedMethod, arguments);
+            }
 
             return soapResponse;
         }
@@ -279,12 +298,23 @@ namespace WebServiceInterface
 
         #region Events Handlers
 
+        /// <summary>
+        /// Raises the <see cref="E:System.Windows.Forms.Form.Load" /> event, which initializes
+        /// the form.
+        /// </summary>
+        /// <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             await InitializeForm();
         }
 
+        /// <summary>
+        /// Called when text is changed on a textbox. This validates the
+        /// dynamically created parameter controls.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void TextChanged_RuleChecker(object sender, EventArgs e)
         {
             if (sender is TextBox)
@@ -293,17 +323,35 @@ namespace WebServiceInterface
             }
         }
 
+        /// <summary>
+        /// Handles the Click event of the btnSend control, and starts
+        /// the SOAP transaction.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private async void btnSend_Click(object sender, EventArgs e)
         {
             await ProcessSOAPTransaction();
         }
 
+        /// <summary>
+        /// Handles the SelectionChangeCommitted event of the drpdwnWebServices control, and updates
+        /// the method dropdown to show the methods associated with the now chosen web service.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void drpdwnWebServices_SelectionChangeCommitted(object sender, EventArgs e)
         {
             WebService selectedService = _libraryManager.GetService(SelectedWebServiceURL);
             drpdwnMethods.DataSource = selectedService.Methods;
         }
 
+        /// <summary>
+        /// Handles the SelectedIndexChanged event of the drpdwnMethods control, which will 
+        /// create parameter controls in the flow layout for user input.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void drpdwnMethods_SelectedIndexChanged(object sender, EventArgs e)
         {
             _parameterManager.ActiveMethod = _libraryManager.GetMethod(SelectedWebServiceURL, SelectedMethodName);

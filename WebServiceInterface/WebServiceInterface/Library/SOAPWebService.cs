@@ -23,7 +23,7 @@ using System.Web.Services.Protocols;
 namespace WebServiceInterface
 {
     /// <summary>
-    /// Represents a convient way to interact with SOAP web services
+    /// Represents a convient way to interact with SOAP web services.
     /// </summary>
     class SOAPWebService
     {
@@ -228,6 +228,7 @@ namespace WebServiceInterface
         /// Gets a WSDL document for the specified SOAP service URL.
         /// </summary>
         /// <returns>The WSDL as an XmlDocument.</returns>
+        /// <exception cref="HttpRequestException">Thrown if URL is invalid or can't connect to server.</exception>
         public async static Task<XmlDocument> GetWSDLAsync(string serviceURL)
         {
             /* Normalize URL based on the web service extension */

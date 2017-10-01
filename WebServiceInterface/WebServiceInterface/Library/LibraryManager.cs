@@ -16,7 +16,11 @@ using Newtonsoft.Json;
 using System.Linq;
 using WebServiceInterface.Library.WSDL;
 using System.Xml;
+using System;
+using System.Collections.Generic;
+using WebServiceInterface.Exceptions;
 using System.Threading.Tasks;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 
 namespace WebServiceInterface.Library
@@ -64,7 +68,7 @@ namespace WebServiceInterface.Library
         /// <returns></returns>
         public WebService GetService(string serviceURL)
         {
-            return _services.First(service => service.Url == serviceURL);
+            return _services.FirstOrDefault(service => service.Url == serviceURL);
         }
 
         /// <summary>
@@ -77,7 +81,7 @@ namespace WebServiceInterface.Library
         {
             /* Find the webservice from the config that matches the WSDL */
             WebService service = _services.FirstOrDefault(s => CheckIfSameUrl(s.Url, serviceURL));
-            
+
             Method result = null;
 
             // If we have a service  then find the method
@@ -87,6 +91,13 @@ namespace WebServiceInterface.Library
             }
 
             return result;
+        }
+
+        public Parameter GetParameter(string serviceURL, string methodName, string parameterName)
+        {
+            return _services.First(service => service.Url == serviceURL)
+                .Methods.First(method => method.Name == methodName)
+                .Parameters.First(parameter => parameter.Name == parameterName);
         }
 
         /// <summary>
@@ -99,13 +110,6 @@ namespace WebServiceInterface.Library
         {
             Method method = GetMethod(serviceURL, methodName);
             return method.Parameters;
-        }
-
-        public Parameter GetParameter(string serviceURL, string methodName, string parameterName)
-        {
-            return _services.First(service => service.Url == serviceURL)
-                .Methods.First(method => method.Name == methodName)
-                .Parameters.First(parameter => parameter.Name == parameterName);
         }
 
 
@@ -122,13 +126,13 @@ namespace WebServiceInterface.Library
             WebService service = null;
 
             // Through each service
-            foreach(WebService currentService in _services)
+            foreach (WebService currentService in _services)
             {
                 // We find the service where we have that service url.
                 if (CheckIfSameUrl(currentService.Url, serviceUrl))
                 {
                     // Then we get the index of the method we are looking for and set it.
-                    for(int j = 0; j < currentService.Methods.Count(); ++j)
+                    for (int j = 0; j < currentService.Methods.Count(); ++j)
                     {
                         if (currentService.Methods[j].Name == methodName)
                         {
@@ -141,18 +145,48 @@ namespace WebServiceInterface.Library
                     break;
                 }
             }
-
             service.Methods.SetValue(newMethod, methodIndex);
         }
 
         /// <summary>
-        /// Loads the WSDLs asynchronous and creates information for each one..
+        /// Loads the WSDL file for each webservice entered in the library
+        /// config file. When a WSDL is loaded, it adds its extended information to
+        /// the method and parameter objects. (namespace for method, parameter types
+        /// for parameter). This needs to be called in order to have sufficient information
+        /// to fufill a soap request (using <see cref="SOAPWebService"/>.
         /// </summary>
-        /// <returns></returns>
-        public async Task LoadWSDLsAsync()
+        /// <returns>True if all WSDL's loaded successfully, false otherwise</returns>
+        public async Task<bool> LoadWSDLsAsync()
         {
+            bool allWsdlsLoaded = true;
+
             /* Apply WSDL information to each service */
             foreach (WebService service in _services)
+            {
+                bool loadSuccess = await LoadWSDLAsync(service);
+
+                /* If a wsdl failed to load, set allWsdlsLoaded to false */
+                if (!loadSuccess && allWsdlsLoaded)
+                {
+                    allWsdlsLoaded = false;
+                }
+            }
+            return allWsdlsLoaded;
+        }
+
+        /// <summary>
+        /// Loads the a WSDL for the selected web service, and modifies the
+        /// webservices method and parameter objects to add in additional information
+        /// about the service (parameter types and method namespace). If a WSDL fails to
+        /// load, the service is removed from the library.
+        /// </summary>
+        /// <param name="service">The service to load the WSDL for.</param>
+        /// <returns>Bool if load successful, false otherwise.</returns>
+        private async Task<bool> LoadWSDLAsync(WebService service)
+        {
+            bool loadSuccess = false;
+
+            try
             {
                 // Genereate xml document
                 XmlDocument wsdlXml = await SOAPWebService.GetWSDLAsync(service.Url);
@@ -161,7 +195,17 @@ namespace WebServiceInterface.Library
                 WSDLParser wsdlParser = new WSDLParser(wsdlXml);
                 WSDLInformation wsdlInfo = wsdlParser.BuildWSDLInformation();
                 MergeWithWSDL(wsdlInfo);
+
+                loadSuccess = true;
             }
+            catch (Exception ex) when (ex is WSDLNodeNotFoundException || ex is HttpRequestException || ex is XmlException)
+            {
+                Logger.Log(ex);
+                List<WebService> serviceList = _services.ToList();
+                serviceList.Remove(service);
+                _services = serviceList.ToArray();
+            }
+            return loadSuccess;
         }
 
         /// <summary>

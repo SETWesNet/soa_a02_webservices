@@ -1,4 +1,15 @@
-﻿using WebServiceInterface.Library.WSDL;
+﻿/* 
+ *  
+ *  Filename: Parameter.cs
+ *  
+ *  Date: 2017-10-01
+ *  
+ *  Name: Colin Mills, Kyle Kreutzer
+ *  
+ * Description:
+ * Holds the definition of the Parameter class
+ * 
+ */
 
 namespace WebServiceInterface.Library
 {

@@ -1,4 +1,17 @@
-﻿using System;
+﻿/* 
+ *  
+ *  Filename: MainForm.cs
+ *  
+ *  Date: 2017-10-01
+ *  
+ *  Name: Colin Mills, Kyle Kreutzer
+ *  
+ * Description:
+ * Holds the definition of the MainForm class
+ * 
+ */
+
+using System;
 using System.Windows.Forms;
 using System.Linq;
 using System.Collections.Generic;
@@ -52,6 +65,10 @@ namespace WebServiceInterface
 
         #endregion
 
+        /// <summary>
+        /// Initializes the form.
+        /// </summary>
+        /// <returns></returns>
         private async Task InitializeForm()
         {
             /* Show loading status */

@@ -140,7 +140,7 @@ namespace WebServiceInterface
 
                 // Grab the documentation tag, it is optiona.
                 XmlNode documentationNode = o.ChildNodes.Cast<XmlNode>().FirstOrDefault(e => e.Name == "wsdl:documentation");
-                if (operation.Documentation != null)
+                if (documentationNode != null)
                 {
                     operation.Documentation = documentationNode.InnerText;
                 }

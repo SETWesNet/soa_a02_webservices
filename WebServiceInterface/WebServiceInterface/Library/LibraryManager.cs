@@ -225,6 +225,7 @@ namespace WebServiceInterface.Library
 
                 method.Response = operation.OutputTypeInformation.Types.Cast<WSDLType>().First();
                 method.Namespace = info.Namespace;
+                method.Documentation = operation.Documentation;
 
                 Parameter[] parameters = method.Parameters;
 

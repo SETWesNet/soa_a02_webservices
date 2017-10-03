@@ -52,5 +52,7 @@ namespace WebServiceInterface.Library
         /// The namespace.
         /// </value>
         public string Namespace { get; set; }
+       
+        public string Documentation { get; set; }
     }
 }

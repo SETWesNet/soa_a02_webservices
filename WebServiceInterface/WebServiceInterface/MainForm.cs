@@ -366,6 +366,7 @@ namespace WebServiceInterface
         private void drpdwnMethods_SelectedIndexChanged(object sender, EventArgs e)
         {
             _parameterManager.ActiveMethod = _libraryManager.GetMethod(SelectedWebServiceURL, SelectedMethodName);
+            txtBoxMethodDescription.Text = _parameterManager.ActiveMethod.Documentation;
             CreateParameterControls();
         }
 

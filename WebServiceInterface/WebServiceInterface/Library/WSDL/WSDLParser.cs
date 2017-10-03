@@ -144,6 +144,10 @@ namespace WebServiceInterface
                 {
                     operation.Documentation = documentationNode.InnerText;
                 }
+                else
+                {
+                    operation.Documentation = "No documentation available at this time";
+                }
 
                 // Get the input node and fill it out with whatever is in the tag.
                 XmlNode inputNode = o.ChildNodes.Cast<XmlNode>().First(e => e.Name == "wsdl:input");

@@ -276,9 +276,8 @@ namespace WebServiceInterface
             catch (SoapException ex)
             {
                 Logger.Log(ex);
-                MessageBox.Show(this, _resourceManager.GetString("Error_SoapFault_Message"),
-                _resourceManager.GetString("Error_SoapFault_Caption"),
-                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, ex.Message, _resourceManager.GetString("Error_SoapFault_Caption"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             catch (HttpRequestException ex)
             {

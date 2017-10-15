@@ -116,7 +116,8 @@ namespace WebServiceInterface
 
                 if (response.StatusCode == HttpStatusCode.InternalServerError)
                 {
-                    throw new SoapException(responseXml.InnerText, XmlQualifiedName.Empty);
+                    string errorMessage = ParseSoapErrorMessage(responseXml);
+                    throw new SoapException(errorMessage, XmlQualifiedName.Empty);
                 }
             }
 
@@ -161,7 +162,7 @@ namespace WebServiceInterface
         }
 
         /// <summary>
-        /// Parses a soap response and returns the contents of the (methodname)Result
+        /// Parses a soap response and returns the contents of the (methodname) result
         /// node. If the data within the node is just a value without tags, a Result tag
         /// will be added around the value.
         /// </summary>
@@ -191,6 +192,34 @@ namespace WebServiceInterface
                 response = response.Insert(response.Length, "</Result>");
             }
             return response;
+        }
+
+        /// <summary>
+        /// Gets the exception message of a SOAP fault and returns it. If no message exists,
+        /// a generic message is returned.
+        /// </summary>
+        /// <param name="soapResponse">The soap response containing a soap fault.</param>
+        /// <returns>Error message.</returns>
+        private string ParseSoapErrorMessage(XmlDocument soapResponse)
+        {
+            /* Set generic error message incase no soap message exists and attempt to get soap message */
+            string errorMessage = "Please ensure parameters are valid and try again.";
+            XmlNodeList textNode = soapResponse.GetElementsByTagName("soap:Text");
+
+            if (textNode.Count == 1)
+            {
+                errorMessage = textNode[0].InnerText;
+
+                /* If stack trace information was returned, parse out the error message */
+                bool hasStackTrace = Regex.IsMatch(errorMessage, @"^[A-Za-z.]*:.*(\n *at ){1}");
+                if (hasStackTrace)
+                {
+                    /* Remove stack trace information */
+                    int stackTraceStart = Regex.Matches(errorMessage, @"(\n *at ){1}")[0].Index;
+                    errorMessage = errorMessage.Substring(0, stackTraceStart);
+                }
+            }
+            return errorMessage;
         }
 
         #region WSDL
